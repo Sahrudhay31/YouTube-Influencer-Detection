@@ -1,0 +1,240 @@
+# Domain-Adaptive Configuration for Influencer Sponsorship & Promotion Analysis
+domains:
+  Tech_Creators:
+    keywords:
+      - mkbhd
+      - marques
+      - marques brownlee
+      - linus
+      - ltt
+      - linus tech tips
+      - mrwhosetheboss
+      - arun
+      - unbox therapy
+      - lew
+      - dave2d
+      - austin evans
+      - ijustine
+      - jon prosser
+      - sponsored
+      - sponsor
+      - review
+      - honest review
+      - sellout
+      - affiliate
+      - affiliate link
+      - paid promo
+      - paid partnership
+      - ad
+      - "#ad"
+      - brand deal
+      - product placement
+      - dbrand
+      - casetify
+      - ridge wallet
+      - nordvpn
+      - expressvpn
+      - surfshark
+      - raycon
+      - anker
+      - apple
+      - samsung
+      - google
+      - overhyped
+      - biased
+      - genuine
+      - paid shill
+      - tech youtuber
+    entity_labels:
+      - Influencer
+      - Product
+      - Brand
+      - Sponsor
+      - Verdict
+      - Feature
+
+  Beauty_Lifestyle:
+    keywords:
+      - mikayla
+      - mikayla nogueira
+      - james charles
+      - jeffree star
+      - emma chamberlain
+      - huda kattan
+      - jaclyn hill
+      - alix earle
+      - tati
+      - tati westbrook
+      - beauty guru
+      - makeup
+      - skincare
+      - mascara
+      - lash gate
+      - foundation
+      - filter
+      - sponsored
+      - ad
+      - "#ad"
+      - paid partnership
+      - sephora
+      - bloom nutrition
+      - bloom
+      - shein
+      - temu
+      - glow recipe
+      - l'oreal
+      - tarte
+      - cosmetic
+      - scam
+      - misleading
+      - honest review
+      - de-influencing
+      - disclosure
+      - paid shill
+      - overhyped
+      - lifestyle
+    entity_labels:
+      - Influencer
+      - Product
+      - Brand
+      - Sponsor
+      - Verdict
+      - Feature
+
+  Fitness_Health:
+    keywords:
+      - huberman
+      - andrew huberman
+      - liver king
+      - cbum
+      - chris bumstead
+      - athlean-x
+      - jeff nippard
+      - chloe ting
+      - greg doucette
+      - more plates more dates
+      - derek
+      - gymshark
+      - supplement
+      - ag1
+      - athletic greens
+      - protein
+      - whey
+      - creatine
+      - pre-workout
+      - peptides
+      - steroids
+      - natty
+      - fake natty
+      - scam
+      - scientific
+      - honest
+      - snake oil
+      - sponsored
+      - partnership
+      - affiliate
+      - overpriced
+      - health claim
+      - deceptive
+      - wellness
+      - cold plunge
+    entity_labels:
+      - Influencer
+      - Product
+      - Brand
+      - Supplement
+      - Verdict
+      - Claim
+
+  Finance_Crypto:
+    keywords:
+      - graham stephan
+      - andrei jikh
+      - meet kevin
+      - coffeezilla
+      - stephen fitton
+      - ali abdaal
+      - coinbureau
+      - bitboy
+      - finance youtuber
+      - finfluencer
+      - ftx
+      - crypto
+      - bitcoin
+      - altcoin
+      - pump and dump
+      - scam
+      - sponsored
+      - affiliate link
+      - course
+      - trading app
+      - robinhood
+      - webull
+      - blockfi
+      - celcius
+      - paid promo
+      - fraud
+      - ponzi
+      - exposing
+      - callout
+      - rugpull
+      - misleading
+      - disclaimer
+      - financial advice
+    entity_labels:
+      - Influencer
+      - Platform
+      - Token
+      - Brand
+      - Verdict
+      - ScamType
+
+  Gaming_Entertainment:
+    keywords:
+      - mrbeast
+      - jimmy donaldson
+      - feastables
+      - prime
+      - prime energy
+      - logan paul
+      - ksi
+      - pewdiepie
+      - felix
+      - ishowspeed
+      - speed
+      - kai cenat
+      - pokimane
+      - xqc
+      - asmongold
+      - moistcrumpikal
+      - penguinz0
+      - charlie
+      - ludwig
+      - valkyrae
+      - gfuel
+      - raid shadow legends
+      - betterhelp
+      - lunchly
+      - candy
+      - chocolate
+      - energy drink
+      - scam
+      - gambling
+      - stake
+      - kick
+      - sponsor
+      - brand deal
+      - sellout
+      - cash grab
+      - deceptive
+      - target audience
+      - kids
+      - genuine
+      - charitable
+    entity_labels:
+      - Influencer
+      - Product
+      - Brand
+      - Sponsor
+      - Verdict
+      - Channel

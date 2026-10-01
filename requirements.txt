@@ -1,0 +1,11 @@
+google-api-python-client
+confluent-kafka
+pyspark
+clickhouse-connect
+transformers
+gliner
+torch
+pandas
+streamlit
+plotly
+pyarrow

@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Spark & Kafka checkpoints and temporary files
+/tmp/spark_checkpoints/
+/tmp/spark_checkpoints_influencer/
+checkpoint/
+metastore_db/
+derby.log
+
+# Datalake & local parquet history (large binaries)
+datalake/
+powerbi_export/*.parquet
+
+# Environment variables & secrets
+.env
