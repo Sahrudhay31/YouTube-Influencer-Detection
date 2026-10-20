@@ -1,0 +1,34 @@
+# quota.yaml — YouTube Data API v3 quota caps
+# All values are in quota UNITS as defined by quota_costs.yaml.
+# Dry-run is the default mode. --live flag is required for any network call.
+
+# ── DAILY CAPS ────────────────────────────────────────────────────────────────
+# Default project quota: 10,000 units/day (general)
+# search.list has its own sub-bucket; keep well under the default ~100/day limit
+daily_unit_cap: 8000          # general cap; 2,000 margin below 10,000 default
+search_list_daily_cap: 20     # search.list has its own tight bucket
+
+# ── PER-RUN CAPS ──────────────────────────────────────────────────────────────
+per_run_max_units: 1500       # hard ceiling per single pipeline invocation
+
+# ── COMMENT SAMPLING ──────────────────────────────────────────────────────────
+comments_max_pages_per_video: 2   # each page = 1 unit via commentThreads.list
+videos_per_channel_for_comments: 10
+
+# ── STAGED ROLLOUT ────────────────────────────────────────────────────────────
+# Recommended staged live run limits (Section 5.10 of the prompt):
+#   Stage 1: --max-units 50   (1–2 channels)
+#   Stage 2: --max-units 300  (≈10 channels)
+#   Stage 3: normal (per_run_max_units)
+
+# ── RETRY ─────────────────────────────────────────────────────────────────────
+retry:
+  max_retries: 5
+  base_backoff_s: 1.0
+  max_backoff_s: 60.0
+  jitter: true
+  retryable_http_codes: [429, 500, 502, 503, 504]
+
+# ── QUOTA RESET ───────────────────────────────────────────────────────────────
+# YouTube quota resets at midnight America/Los_Angeles (Pacific Time).
+quota_reset_timezone: "America/Los_Angeles"
