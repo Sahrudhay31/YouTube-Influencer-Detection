@@ -4,6 +4,27 @@ All notable changes to the **Domain-Aware YouTube Influencer Detection & Promoti
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Phase 4: Sponsorship Detection & Promo Lift] - 2026-10-20
+
+### Added
+- **Sponsorship Rule Configuration (`config/sponsorship.yaml`)**:
+  - Declarative patterns for disclosure phrases, affiliate links, promo codes, UTM parameters, candidate brands, and minimum video thresholds.
+- **Sponsorship Detection Engine (`src/sponsorship/detector.py`)**:
+  - Video-level regex-based detection across titles, descriptions, and tags.
+  - Extracts evidence fields: `has_disclosure`, `has_affiliate_link`, `has_promo_code`, `has_utm`, `is_sponsored`.
+- **Channel Promo Lift Calculator (`src/sponsorship/promo_lift.py`)**:
+  - Computes `sponsored_rate`, `sponsored_count`, `nonsponsored_count`, and `promo_lift = median(views_sponsored) / median(views_nonsponsored)`.
+  - Enforces strict null returns (never 0) when fewer than 3 videos exist on either side, with zero-division protection.
+- **Sponsorship Pipeline Runner (`src/sponsorship/pipeline.py`)**:
+  - Ingests silver video dataset, persists video-level features to `data/silver/sponsorship_video_features`, and saves channel metrics to `data/silver/channel_sponsorship_metrics`.
+  - Identified 5,625 sponsored videos (11.25%) across 50,000 records, and valid promo lift across 41 qualifying channels (median lift: 1.258).
+- **Stratified Human Label Export (`scripts/export_sponsor_label_sample.py`)**:
+  - Exported 300-video sample to `labels/sponsor_to_label.csv` for human verification.
+- **Smoke Tests (`tests/spark/test_sponsorship.py`)**:
+  - Smoke tests `T-S1` through `T-S4` covering positive/negative handwritten fixtures, null on low sample size, hand-computed value match, and division-by-zero protection.
+
+---
+
 ## [Phase 3: Domain Taxonomy & Domain Classification] - 2026-10-20
 
 ### Added

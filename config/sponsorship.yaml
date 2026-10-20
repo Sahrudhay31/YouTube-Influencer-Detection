@@ -1,0 +1,57 @@
+# sponsorship.yaml — rules and patterns for sponsorship detection
+# All terms are source: agent_proposed until reviewed by human owner.
+
+disclosure_phrases:
+  - {pattern: "#ad", source: agent_proposed}
+  - {pattern: "#sponsored", source: agent_proposed}
+  - {pattern: "#gifted", source: agent_proposed}
+  - {pattern: "paid partnership", source: agent_proposed}
+  - {pattern: "sponsored by", source: agent_proposed}
+  - {pattern: "in partnership with", source: agent_proposed}
+  - {pattern: "thanks to .* for sponsoring", source: agent_proposed}
+  - {pattern: "thank you .* for partnering", source: agent_proposed}
+  - {pattern: "paid promotion", source: agent_proposed}
+  - {pattern: "pr package", source: agent_proposed}
+  - {pattern: "press sample", source: agent_proposed}
+
+affiliate_link_patterns:
+  - {pattern: "amzn\\.to", source: agent_proposed}
+  - {pattern: "liketk\\.it", source: agent_proposed}
+  - {pattern: "ltk\\.com", source: agent_proposed}
+  - {pattern: "shopmy\\.us", source: agent_proposed}
+  - {pattern: "magiclinks\\.com", source: agent_proposed}
+  - {pattern: "go\\.magik\\.ly", source: agent_proposed}
+  - {pattern: "rstyle\\.me", source: agent_proposed}
+  - {pattern: "shareasale\\.com", source: agent_proposed}
+  - {pattern: "shopstyle\\.it", source: agent_proposed}
+
+promo_code_patterns:
+  - {pattern: "use code", source: agent_proposed}
+  - {pattern: "discount code", source: agent_proposed}
+  - {pattern: "coupon code", source: agent_proposed}
+  - {pattern: "promo code", source: agent_proposed}
+  - {pattern: "code .* for .* off", source: agent_proposed}
+
+utm_parameters:
+  - {pattern: "utm_source=", source: agent_proposed}
+  - {pattern: "utm_campaign=", source: agent_proposed}
+  - {pattern: "utm_medium=", source: agent_proposed}
+
+candidate_brands:
+  - {brand: "sephora", source: agent_proposed}
+  - {brand: "ulta", source: agent_proposed}
+  - {brand: "glossier", source: agent_proposed}
+  - {brand: "fenty beauty", source: agent_proposed}
+  - {brand: "colourpop", source: agent_proposed}
+  - {brand: "morphe", source: agent_proposed}
+  - {brand: "anastasia beverly hills", source: agent_proposed}
+  - {brand: "charlotte tilbury", source: agent_proposed}
+  - {brand: "tarte", source: agent_proposed}
+  - {brand: "urban decay", source: agent_proposed}
+  - {brand: "too faced", source: agent_proposed}
+  - {brand: "curology", source: agent_proposed}
+  - {brand: "function of beauty", source: agent_proposed}
+
+thresholds:
+  min_sponsored_videos_for_lift: 3
+  min_nonsponsored_videos_for_lift: 3
