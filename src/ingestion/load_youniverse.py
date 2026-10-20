@@ -1,12 +1,13 @@
 """
 src/ingestion/load_youniverse.py
-Load YouNiverse raw files into HDFS silver zone as partitioned Parquet.
+Load YouNiverse raw files into silver zone as partitioned Parquet.
 
 Rules (Section 6):
 - Dev sample uses dev_sample_fraction from settings.yaml.
-- Gzip is not splittable; raw .gz → Parquet conversion done once.
+- Gzip is not splittable; raw .gz -> Parquet conversion done once.
 - Row counts raw vs Parquet MUST match.
 - HDFS failures raise loudly; no silent local fallback.
+- Explicit --local flag allows writing to local silver zone without silent fallback.
 - Job is idempotent (re-run on existing output is safe).
 """
 from __future__ import annotations
@@ -27,24 +28,23 @@ def load_youniverse(
     raw_dir: str,
     dev_mode: bool = True,
     overwrite: bool = False,
+    local_mode: bool = False,
 ) -> dict[str, int]:
     """
-    Convert YouNiverse raw .gz files to Parquet in HDFS silver zone.
+    Convert YouNiverse raw .gz files to Parquet in silver zone.
 
     Parameters
     ----------
     raw_dir : str
         Local directory containing the YouNiverse .gz files.
     dev_mode : bool
-        If True, uses dev_sample_fraction from settings.yaml.
+        If True, uses dev_sample_fraction / dev_sample_max_rows.
     overwrite : bool
         If True, overwrites existing silver Parquet. Idempotent when False.
-
-    Returns
-    -------
-    dict mapping table name → row count
+    local_mode : bool
+        If True, writes to local silver zone (file:///); else HDFS.
     """
-    spark = get_spark()
+    spark = get_spark(local_mode=local_mode)
     cfg = get_settings()
     seed = cfg["data"]["seed"]
     frac = cfg["data"]["dev_sample_fraction"] if dev_mode else 1.0
@@ -62,8 +62,8 @@ def load_youniverse(
         t0 = time.time()
         logger.info("Loading metadata: %s", meta_raw)
 
-        # Read gzip JSONL — must print schema BEFORE assuming any column names
-        df = spark.read.option("compression", "gzip").json(str(meta_raw))
+        # Read gzip JSONL
+        df = spark.read.json(str(meta_raw))
         logger.info("Metadata raw schema: %s", df.schema.simpleString())
 
         raw_count = df.count()
@@ -71,13 +71,17 @@ def load_youniverse(
 
         if frac < 1.0:
             df = df.sample(fraction=frac, seed=seed)
-        if max_rows:
+        if max_rows and max_rows < raw_count:
             df = df.limit(max_rows)
 
         sample_count = df.count()
         logger.info("Metadata sample count: %d (frac=%.4f)", sample_count, frac)
 
-        out_path = hdfs("silver", "youniverse_metadata")
+        if local_mode:
+            out_path = str(local("silver", "youniverse_metadata"))
+        else:
+            out_path = hdfs("silver", "youniverse_metadata")
+
         mode = "overwrite" if overwrite else "ignore"
         (
             df.write
@@ -91,10 +95,10 @@ def load_youniverse(
             raise RuntimeError(
                 f"Row count mismatch after Parquet write: "
                 f"wrote {sample_count}, read back {verify_count}. "
-                "HDFS write may be corrupted."
+                "Write may be corrupted."
             )
         logger.info(
-            "✅ Metadata written to %s. Rows: %d. Time: %.1fs",
+            "[OK] Metadata written to %s. Rows: %d. Time: %.1fs",
             out_path, verify_count, time.time() - t0
         )
         results["metadata"] = verify_count
@@ -120,12 +124,16 @@ def load_youniverse(
 
         if frac < 1.0:
             df_ts = df_ts.sample(fraction=frac, seed=seed)
-        if max_rows:
+        if max_rows and max_rows < raw_ts_count:
             df_ts = df_ts.limit(max_rows)
 
         sample_count = df_ts.count()
 
-        out_path = hdfs("silver", "youniverse_timeseries")
+        if local_mode:
+            out_path = str(local("silver", "youniverse_timeseries"))
+        else:
+            out_path = hdfs("silver", "youniverse_timeseries")
+
         mode = "overwrite" if overwrite else "ignore"
         df_ts.write.mode(mode).parquet(out_path)
 
@@ -135,25 +143,31 @@ def load_youniverse(
                 f"Timeseries row count mismatch: wrote {sample_count}, read back {verify_count}."
             )
         logger.info(
-            "✅ Timeseries written to %s. Rows: %d. Time: %.1fs",
+            "[OK] Timeseries written to %s. Rows: %d. Time: %.1fs",
             out_path, verify_count, time.time() - t0
         )
         results["timeseries"] = verify_count
     else:
-        logger.warning("df_timeseries_en.csv.gz not found — skipping.")
+        logger.info("df_timeseries_en.csv.gz not present in %s (optional for initial metadata run).", raw_path)
 
     spark.stop()
     return results
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Load YouNiverse to HDFS silver Parquet.")
+    parser = argparse.ArgumentParser(description="Load YouNiverse to silver Parquet.")
     parser.add_argument("--raw-dir", required=True, help="Local directory with YouNiverse .gz files.")
     parser.add_argument("--full", action="store_true", help="Load full dataset (default: dev sample).")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing Parquet.")
+    parser.add_argument("--local", action="store_true", help="Write to local silver zone (file:///) instead of HDFS.")
     args = parser.parse_args()
 
-    counts = load_youniverse(args.raw_dir, dev_mode=not args.full, overwrite=args.overwrite)
+    counts = load_youniverse(
+        args.raw_dir,
+        dev_mode=not args.full,
+        overwrite=args.overwrite,
+        local_mode=args.local,
+    )
     print("\nLoaded tables:")
     for name, count in counts.items():
         print(f"  {name}: {count:,} rows")

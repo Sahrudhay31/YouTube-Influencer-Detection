@@ -35,6 +35,9 @@ retention:
 
 # ── PATHS (local) ─────────────────────────────────────────────────────────────
 paths:
+  raw:     "data/raw/"
+  silver:  "data/silver/"
+  gold:    "data/gold/"
   labels:  "labels/"
   metrics: "metrics/"
   logs:    "logs/"

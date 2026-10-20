@@ -30,6 +30,13 @@ def get_spark(app_name: str | None = None, local_mode: bool = False):
             os.environ["JAVA_HOME"] = str(default_java)
             os.environ["PATH"] = str(default_java / "bin") + os.pathsep + os.environ.get("PATH", "")
 
+    # Ensure HADOOP_HOME is configured for Windows native operations
+    if "HADOOP_HOME" not in os.environ:
+        default_hadoop = Path(r"C:\hadoop")
+        if default_hadoop.exists():
+            os.environ["HADOOP_HOME"] = str(default_hadoop)
+            os.environ["PATH"] = str(default_hadoop / "bin") + os.pathsep + os.environ.get("PATH", "")
+
     # Ensure worker python matches active driver interpreter
     if "PYSPARK_PYTHON" not in os.environ:
         os.environ["PYSPARK_PYTHON"] = sys.executable

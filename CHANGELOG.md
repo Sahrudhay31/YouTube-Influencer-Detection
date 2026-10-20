@@ -4,6 +4,27 @@ All notable changes to the **Domain-Aware YouTube Influencer Detection & Promoti
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Phase 2: Infrastructure and Data Layer] - 2026-10-20
+
+### Added
+- **YouNiverse Dev Sample Extractor (`scripts/extract_dev_sample.py`)**:
+  - Deterministic 50,000-row streaming extractor reading from raw `yt_metadata_en.jsonl.gz`.
+- **YouNiverse Ingestion Engine (`src/ingestion/load_youniverse.py`)**:
+  - PySpark batch conversion from raw JSONL Gzip to partitioned Silver Parquet (`data/silver/youniverse_metadata`).
+  - Supports `--full`, `--local`, and `--overwrite` with zero silent fallbacks.
+  - Strict round-trip row count verification.
+- **Spark Test Suite (`tests/spark/test_data_layer.py`)**:
+  - Comprehensive smoke test suite covering T-D1 through T-D6 (round-trip, row counts, duplicate checks, cap validation, idempotency, and loud failure on bad URIs).
+- **Data Documentation**:
+  - `docs/data_dictionary.md`: Complete column definitions, types, nullability, and semantics.
+  - `docs/data_quality_report.md`: Exact statistics across 50,000 rows (0 duplicate IDs, 127 channels, 15 categories, 2.24% missing like/dislike counts).
+
+### Changed
+- **Spark Session Configuration (`src/common/spark_session.py`)**:
+  - Added Windows environment auto-detection for OpenJDK 17, `HADOOP_HOME`, and `PYSPARK_PYTHON` interpreter parity.
+- **Verification Harness (`scripts/check_all.py`)**:
+  - Updated to safely scan and verify all 20 unit and Spark test cases automatically.
+
 ---
 
 ## [Phase 1: Foundation, Safety, and Quota Guard] - 2026-10-20
