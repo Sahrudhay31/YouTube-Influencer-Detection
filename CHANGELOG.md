@@ -4,6 +4,34 @@ All notable changes to the **Domain-Aware YouTube Influencer Detection & Promoti
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Phase 3: Domain Taxonomy & Domain Classification] - 2026-10-20
+
+### Added
+- **Domain Taxonomy & Config (`config/domains/taxonomy.yaml`, `config/domains/beauty_personal_care.yaml`)**:
+  - Hierarchical macro-to-micro categorization for Beauty & Personal Care (Skincare, Makeup, Haircare, Nail Art, Fragrance, Personal Hygiene).
+  - Explicit mapping to YouNiverse `Howto & Style` and related category metadata.
+- **Stratified Human Label Sample (`labels/domain_to_label.csv`)**:
+  - 500-video balanced sample exported via `scripts/export_domain_label_sample.py` for ground truth validation.
+- **Text Preprocessing Engine (`src/classification/text_cleaner.py`)**:
+  - Native Spark SQL cleaning (URL stripping, emoji normalization, punctuation removal, whitespace collapsing, and description truncation).
+- **Channel-Isolated Dataset Splitter (`src/classification/dataset_splitter.py`)**:
+  - Grouped channel splitting ensuring zero channel leakage across train (28,156), val (14,596), and test (7,248) splits.
+- **Benchmark Baselines (`src/classification/baselines.py`)**:
+  - Majority-class baseline (val accuracy = 89.74%).
+  - Keyword-rule matching baseline (val accuracy = 94.87%, macro-F1 = 83.09%).
+- **PySpark ML Classification Pipeline (`src/classification/domain_classifier.py`)**:
+  - Tokenizer -> StopWordsRemover -> CountVectorizer -> IDF -> Classifier pipeline.
+  - Trained and compared Logistic Regression, Naive Bayes, and LinearSVC.
+  - Naive Bayes selected as best regularized model (Train Acc: 97.22%, Val Acc: 95.83%, Test Acc: 97.53%, Val Macro-F1: 95.92%).
+  - Best model pipeline saved to `data/models/domain_classifier_naive_bayes`.
+- **Channel Domain Roll-up (`src/classification/channel_rollup.py`)**:
+  - Computes channel-level primary domain, in-domain video share, and domain purity bounded in [0, 1].
+  - Saved to `data/silver/channel_domain_profiles`.
+- **Phase 3 Smoke Tests (`tests/spark/test_domain_classifier.py`)**:
+  - Smoke tests `T-C1` through `T-C6` all verified passing.
+
+---
+
 ## [Phase 2: Infrastructure and Data Layer] - 2026-10-20
 
 ### Added

@@ -43,6 +43,7 @@ paths:
   logs:    "logs/"
   state:   "state/"
   docs:    "docs/"
+  models:  "data/models/"
 
 # ── LOGGING ───────────────────────────────────────────────────────────────────
 logging:

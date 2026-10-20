@@ -60,7 +60,7 @@ def update_readme(
     )
 
     rp.write_text(new_readme, encoding="utf-8")
-    print(f"✅ README.md model results section updated from {lp}")
+    print(f"[OK] README.md model results section updated from {lp}")
 
 
 if __name__ == "__main__":

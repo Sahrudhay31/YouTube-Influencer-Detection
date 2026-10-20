@@ -9,7 +9,8 @@ macro_domains:
 
   beauty_personal_care:
     source: agent_proposed
-    youtube_category_ids: [26]   # "Howto & Style" — verify against actual YouNiverse category_id values
+    youtube_category_ids: [26]   # "Howto & Style"
+    youniverse_categories: ["Howto & Style"]
     micro_domains:
       - skincare
       - makeup
