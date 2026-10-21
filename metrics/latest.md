@@ -8,6 +8,9 @@
 | domain_classifier_linear_svc | domain_classification | linear_svc | 0.9980110811194772 | 0.9213483146067416 | 0.9297737306843267 | 0.9197831682590861 |  | ✅ | ⚠️ SUSPICIOUS: train_accuracy=0.9980 > 0.98. Run leakage pro |
 | domain_classifier_logistic_regression | domain_classification | logistic_regression | 0.9989700241511579 | 0.9131268840778295 | 0.967439293598234 | 0.8955041917797477 |  | ✅ | ⚠️ SUSPICIOUS: train_accuracy=0.9990 > 0.98. Run leakage pro |
 | domain_classifier_naive_bayes | domain_classification | naive_bayes | 0.9722261684898423 | 0.9582762400657714 | 0.97530353200883 | 0.9591789394523786 |  | ✅ | Weak-label agreement; keyword baseline acc=0.9487 |
+| influencer_classifier_gbt | influencer_classification | gbt | 1.0 | 0.8518518518518519 | 0.8235294117647058 | 0.8365539452495974 | 0.6913636363636363 | ⚠️ 0.148 | ⚠️ OVERFIT WARNING: train_acc - val_acc = 0.1481 (threshold  |
+| influencer_classifier_logistic_regression | influencer_classification | logistic_regression | 0.7469879518072289 | 0.7777777777777778 | 0.7058823529411765 | 0.791005291005291 | 0.5004112554112554 | ✅ | Option B label. Baseline PR-AUC=0.1969. Top feature=N/A |
+| influencer_classifier_random_forest | influencer_classification | random_forest | 0.9759036144578314 | 0.7407407407407407 | 0.7647058823529411 | 0.7292181069958849 | 0.2825095194660412 | ⚠️ 0.235 | ⚠️ OVERFIT WARNING: train_acc - val_acc = 0.2352 (threshold  |
 
 
-_Last updated: 2026-10-20T12:07:21.693642+00:00_
+_Last updated: 2026-10-20T19:00:28.959658+00:00_

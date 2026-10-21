@@ -4,6 +4,25 @@ All notable changes to the **Domain-Aware YouTube Influencer Detection & Promoti
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Phase 5: Channel Features & Influencer Classification] - 2026-10-21
+
+### Added
+- **Influencer Classification Config (`config/influencer.yaml`)**:
+  - Encoded Option B ground-truth label definition (`median_views >= 10000.0` AND `sponsored_count >= 1`), strict leakage guard exclusions, and dataset quantile cut points for size tiers.
+- **Channel Feature Engineering Engine (`src/influencer/features.py`)**:
+  - Aggregates behavioral and temporal signals: `video_count`, `mean_duration`, `engagement_rate`, `view_consistency_cv`, `channel_age_days`, `upload_cadence_days`, `domain_purity`, `in_domain_share`.
+  - Assigns size tiers: `nano` (<2,511), `micro` (2,511–8,011), `macro` (8,011–127,745), and `mega` (>=127,745) based on empirical YouNiverse channel quantiles.
+  - Handles feature nulls safely with zero row drops.
+- **Influencer Classifier Pipeline (`src/influencer/classifier.py`)**:
+  - Trains and compares Random Forest, GBT, and Logistic Regression with balanced inverse-frequency class weights ($w_0 = 0.625, w_1 = 2.54$).
+  - GBT chosen as top model: Val PR-AUC = 0.6914 (beating baseline 0.1969 by +351%), Val ROC-AUC = 0.9091, Val Macro-F1 = 0.8366, Val Accuracy = 85.19% (beating majority baseline 80.31%).
+  - Extracted feature importances: `video_count` (20.5%), `mean_duration` (17.0%), `engagement_rate` (16.3%), `channel_age_days` (13.4%), `view_consistency_cv` (12.8%).
+  - Persisted best GBT model to `data/models/influencer_classifier_gbt` and gold table to `data/gold/channel_influencer_profiles`.
+- **Phase 5 Smoke Tests (`tests/spark/test_influencer.py`)**:
+  - Smoke tests `T-I1` through `T-I5` covering leakage guard column disjointness, exhaustive/mutually exclusive size tiers, PR-AUC baseline beating, class weighting, and null safety.
+
+---
+
 ## [Phase 4: Sponsorship Detection & Promo Lift] - 2026-10-20
 
 ### Added

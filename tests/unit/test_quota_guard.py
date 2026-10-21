@@ -209,11 +209,11 @@ def test_tq10_purge_respects_retention(tmp_path, monkeypatch):
     from unittest.mock import patch as _patch
     import subprocess
 
-    # Build fake hdfs ls output with two partitions
-    today = datetime.now().strftime("%Y-%m-%d")
-    from datetime import timedelta
-    old_date = (datetime.now() - timedelta(days=31)).strftime("%Y-%m-%d")
-    new_date = (datetime.now() - timedelta(days=10)).strftime("%Y-%m-%d")
+    # Build fake hdfs ls output with two partitions (using UTC consistent with purge logic)
+    from datetime import timedelta, timezone
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    old_date = (datetime.now(timezone.utc) - timedelta(days=35)).strftime("%Y-%m-%d")
+    new_date = (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%d")
 
     fake_ls_output = (
         f"drwxr-xr-x   - user group 0 2024-01-01 /bda/raw/api/dt={old_date}\n"

@@ -1,0 +1,30 @@
+# influencer.yaml — Phase 5 Channel Features & Influencer Classification Config
+
+label_definition:
+  type: option_b_threshold
+  reach_metric: median_views
+  reach_threshold: 10000.0
+  sponsorship_metric: sponsored_count
+  sponsorship_threshold: 1
+  # CRITICAL: These columns are used to DEFINE labels and MUST NEVER appear in training features
+  label_defining_columns:
+    - median_views
+    - sponsored_count
+    - sponsored_rate
+
+feature_columns:
+  - video_count
+  - mean_duration
+  - engagement_rate
+  - view_consistency_cv
+  - channel_age_days
+  - upload_cadence_days
+  - domain_purity
+  - in_domain_share
+
+tiers:
+  # Derived from YouNiverse 50k dev sample channel quantiles: [2511, 8011, 29666, 127745]
+  metric: median_views
+  nano_max: 2511.0
+  micro_max: 8011.0
+  macro_max: 127745.0
