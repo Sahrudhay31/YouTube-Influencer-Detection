@@ -4,6 +4,48 @@ All notable changes to the **Domain-Aware YouTube Influencer Detection & Promoti
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Phase 6: Live Enrichment Funnel, Comments & Audience Quality] - 2026-10-21
+
+### Added
+- **Enrichment Configuration (`config/enrichment.yaml`)**:
+  - Four-stage funnel thresholds (domain gate, influencer prob ≥ 0.55, reach ≥ 5,000, cap 50 candidates).
+  - Comment sampling parameters (5 videos/channel, 2 pages/video, 200 comments max, 5% label export fraction).
+  - 17-pattern purchase-intent keyword regex groups.
+  - Loyalty proxy (`loyal_videos_min: 2`) and authenticity thresholds (dup share < 15%, top-1 share < 10%, top-5 share < 30%, spike × 5).
+- **Multi-Stage Enrichment Funnel (`src/enrichment/funnel.py`)**:
+  - Stage 1: Domain gate — channels must appear in silver domain profiles.
+  - Stage 2: Influencer probability gate (GBT score ≥ 0.55).
+  - Stage 3: Reach gate — `median_views` or `engagement_rate × channel_age_days` proxy ≥ 5,000.
+  - Stage 4: Top-N cap by probability, respecting `max_api_candidates`.
+  - Annotates candidates with `funnel_rank`, `funnel_pass_rate`, `enrichment_mode`.
+  - Writes shortlist to `data/gold/enrichment_candidates` (`.dryrun` suffix in dry-run mode).
+- **YouTube API Client with QuotaGuard (`src/enrichment/youtube_client.py`)**:
+  - `QuotaGuard`: per-run unit cap enforced before every API call; raises `QuotaExceededError` on breach.
+  - `YouTubeClient`: dual `dry_run` / `live` modes; all calls logged to `logs/api_calls.jsonl` (key never logged).
+  - Methods: `get_channel_stats`, `get_top_videos`, `iter_comment_threads` (page-bounded).
+  - Exponential back-off with jitter on HTTP 429/5xx errors.
+- **Comment Sampler & Purchase-Intent Classifier (`src/enrichment/comment_sampler.py`)**:
+  - Reservoir sampling (Algorithm R) for bounded memory across multi-page comment streams.
+  - Salted SHA-256 author ID hashing — raw author IDs never written to disk (`COMMENT_HASH_SALT` env var).
+  - Rule-based purchase-intent classification (17 keyword regex patterns, configurable threshold).
+  - Stratified label export to `labels/purchase_intent_labelled.csv` (balanced intent/non-intent).
+- **Audience Quality & Authenticity Module (`src/enrichment/audience_quality.py`)**:
+  - `loyal_commenter_share`: fraction of hashed authors appearing in ≥ 2 distinct videos.
+  - `duplicate_comment_share`: exact duplicate (author+text) fraction.
+  - `top1_commenter_share` / `top5_commenter_share`: commenter concentration metrics.
+  - `comment_spike_flag`: any video with > 5× channel-mean comments.
+  - `any_authenticity_flag`: OR of all individual flags; channelled to gold table.
+  - Saves to `data/gold/audience_quality`.
+- **Phase 6 Pipeline Orchestrator (`src/enrichment/pipeline.py`)**:
+  - End-to-end runner: funnel → API snapshot → comment sampling → label export → audience quality.
+  - Each step is error-isolated; non-fatal failures are captured in summary dict.
+  - Returns structured summary with counts, quota units used, and elapsed time.
+  - CLI flags: `--mode`, `--max-units`, `--max-candidates`.
+- **Phase 6 Smoke Tests (`tests/spark/test_enrichment.py`)**:
+  - 10 smoke tests T-E1 through T-E10 covering: QuotaGuard cap enforcement, dry-run safety, SHA-256 hash determinism/one-way property, purchase-intent rules, reservoir sampling reproducibility, duplicate share (zero case), top-1 commenter share, authenticity flag triggering, funnel cap, and loyalty metric zero case.
+
+---
+
 ## [Phase 5: Channel Features & Influencer Classification] - 2026-10-21
 
 ### Added

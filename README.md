@@ -82,6 +82,7 @@ Configuration files are located in `config/`:
 - `config/scoring.yaml`: Calibrated weights for Promotion-Potential Score components.
 - `config/domains/taxonomy.yaml`: Hierarchical macro-to-micro domain taxonomy.
 - `config/domains/beauty_personal_care.yaml`: Domain keywords, sponsor patterns, and purchase intent phrases.
+- `config/enrichment.yaml`: Phase 6 funnel thresholds, comment sampling limits, purchase-intent keyword patterns, loyalty proxy config, and authenticity check thresholds.
 
 ---
 
@@ -106,7 +107,20 @@ This verifies:
 3. **Python Syntax**: Compiles all source files.
 4. **Unit Tests**: Runs all Quota Guard (`T-Q1` to `T-Q10`) and Metrics Logger (`T-M1` to `T-M4`) tests.
 
-### 3. Estimate API Cost in Dry-Run
+### 3. Run Phase 6 Enrichment Funnel (dry-run, no API calls)
+```powershell
+python -m src.enrichment.pipeline
+```
+
+### 4. Run Phase 6 Enrichment Funnel (live, bounded)
+```powershell
+# Stage 1 live test: 1-2 channels, 50 quota units
+python -m src.enrichment.pipeline --mode live --max-units 50 --max-candidates 2
+# Stage 2 live test: ~10 channels, 300 quota units
+python -m src.enrichment.pipeline --mode live --max-units 300 --max-candidates 10
+```
+
+### 5. Estimate API Cost in Dry-Run
 ```powershell
 python -m src.ingestion.plan --channels 10 --videos-per-channel 10 --comment-videos 3
 ```
