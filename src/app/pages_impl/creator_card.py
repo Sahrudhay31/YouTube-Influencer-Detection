@@ -59,7 +59,10 @@ def render_creator_card_page() -> None:
                 <h2 style="margin: 0; color: #FFFFFF; font-size: 1.8rem;">{selected_id}</h2>
                 <span class="{badge_class}">{tier}</span>
             </div>
-            <p style="color: #94A3B8; margin: 4px 0 0 0;">Domain: <strong>Beauty & Personal Care</strong> | Focus: <strong>{row.get('domain_purity', 0.8)*100:.1f}% in-domain</strong></p>
+            <p style="color: #94A3B8; margin: 4px 0 0 0;">
+                Domain: <strong>Beauty & Personal Care</strong> | Focus: <strong>{row.get('domain_purity', 0.8)*100:.1f}% in-domain</strong>
+                &nbsp;|&nbsp; <a href="https://www.youtube.com/channel/{selected_id}" target="_blank" style="color: #38BDF8; text-decoration: none; font-weight: 600;">🔗 View Channel on YouTube ↗</a>
+            </p>
             """,
             unsafe_allow_html=True,
         )

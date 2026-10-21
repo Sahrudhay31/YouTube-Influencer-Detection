@@ -112,9 +112,14 @@ def render_find_influencers_page() -> None:
     filtered = filtered.sort_values(by="promotion_potential_score", ascending=False).reset_index(drop=True)
 
     st.markdown(f"**Found {len(filtered)} eligible creators** matching criteria:")
+    st.caption("ℹ️ Creators in the YouNiverse baseline are indexed by their permanent 24-character YouTube Channel ID (`UC...`). Click **Open on YouTube ↗** to view their channel name, profile, and video uploads.")
+
+    # Create clickable YouTube link column
+    filtered["channel_url"] = "https://www.youtube.com/channel/" + filtered["channel_id"].astype(str)
 
     # Prepare display columns
     display_cols = [
+        "channel_url",
         "channel_id",
         "size_tier",
         "promotion_potential_score",
@@ -128,6 +133,7 @@ def render_find_influencers_page() -> None:
     existing_disp = [c for c in display_cols if c in filtered.columns]
 
     rename_map = {
+        "channel_url": "YouTube Link",
         "channel_id": "Channel ID",
         "size_tier": "Size Tier",
         "promotion_potential_score": "Promotion Score",
@@ -141,6 +147,12 @@ def render_find_influencers_page() -> None:
 
     st.dataframe(
         filtered[existing_disp].rename(columns=rename_map),
+        column_config={
+            "YouTube Link": st.column_config.LinkColumn(
+                "YouTube Channel",
+                display_text="Open on YouTube ↗",
+            ),
+        },
         use_container_width=True,
         height=320,
     )
