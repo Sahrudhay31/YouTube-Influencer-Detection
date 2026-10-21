@@ -4,6 +4,28 @@ All notable changes to the **Domain-Aware YouTube Influencer Detection & Promoti
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Phase 9: Scalability Benchmark & Final Documentation] - 2026-10-21
+
+### Added
+- **Core Parallelism & Storage Scalability Benchmark (`scripts/scalability_benchmark.py`)**:
+  - Standalone, automated PySpark benchmark script evaluating core scaling and storage format performance on 50,000 video records (`metrics/scalability.csv`).
+  - Worker core scaling:
+    - `local[1]`: 10.106s (4,947.5 rec/s, 1.00x baseline).
+    - `local[2]`: 0.807s (61,936.0 rec/s, **12.52x speedup**).
+    - `local[4]`: 0.778s (64,286.2 rec/s, **12.99x speedup**).
+  - Storage format throughput:
+    - Raw CSV: 2.735s read (9,141.6 rec/s), 1.942s write.
+    - Flat Parquet (Snappy): 0.279s read (89,743.0 rec/s, **9.80x faster than CSV**), 1.487s write.
+    - Domain-Partitioned Parquet (`domain_macro/domain_micro`): 0.407s read (61,428.5 rec/s, **6.72x faster than CSV**), 2.270s write.
+- **Definitive Report Metrics Catalog (`docs/REPORT_NUMBERS.md`)**:
+  - 5-section reference cataloging every single cited metric across the entire repository with exact source file and line number references (adhering strictly to R1, R7 zero-fabrication rules).
+- **Architecture Decision Records Update (`docs/DECISIONS.md`)**:
+  - Documented ADR-006 (Option B compound ground-truth influencer labeling), ADR-007 (Four-stage enrichment funnel & SHA-256 commenter privacy hashing), ADR-008 (Composite Promotion-Potential Score with dynamic weight renormalisation), ADR-009 (Decoupled Streamlit application architecture with precomputed gold cache), and ADR-010 (Parallelism and storage benchmarking).
+- **Repository Documentation Polish (`README.md`)**:
+  - Added dedicated Scalability & Storage Performance section.
+  - Clarified Windows Streamlit launch guidance (`python -m streamlit run dashboard.py`).
+  - Full project architecture and governance disclosures verified.
+
 ## [Phase 8: Streamlit Application & Interactive Discovery Dashboard] - 2026-10-21
 
 ### Added
