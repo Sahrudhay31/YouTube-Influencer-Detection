@@ -14,6 +14,24 @@ import yaml
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
+def load_env() -> None:
+    """Load key-value pairs from .env into os.environ if not already present."""
+    env_file = _PROJECT_ROOT / ".env"
+    if env_file.exists():
+        with open(env_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, val = line.split("=", 1)
+                    key = key.strip()
+                    val = val.strip().strip('"').strip("'")
+                    if key and key not in os.environ:
+                        os.environ[key] = val
+
+
+load_env()
+
+
 def _load_yaml(path: Path) -> dict[str, Any]:
     if not path.exists():
         raise FileNotFoundError(f"Config file not found: {path}")

@@ -92,9 +92,9 @@ def run_funnel(
     if "probability" not in df.columns:
         raise ValueError("Gold profiles missing 'probability' column. Re-run Phase 5 classifier.")
 
-    # Extract P(influencer=1) from the probability DenseVector
-    extract_prob = F.udf(lambda v: float(v[1]) if v is not None else 0.0)
-    df = df.withColumn("influencer_prob", extract_prob(F.col("probability")).cast("double"))
+    # Extract P(influencer=1) from the probability DenseVector using native vector_to_array
+    from pyspark.ml.functions import vector_to_array
+    df = df.withColumn("influencer_prob", vector_to_array(F.col("probability"))[1].cast("double"))
 
     total_before = df.count()
     logger.info("[Funnel] Stage 0: total gold channels = %d", total_before)

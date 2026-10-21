@@ -74,8 +74,8 @@ def run_enrichment_pipeline(
         "errors": [],
     }
 
-    # ── Step 1: Enrichment funnel ─────────────────────────────────────────────
-    logger.info("── Step 1: Enrichment funnel ──")
+    # -- Step 1: Enrichment funnel ---------------------------------------------
+    logger.info("-- Step 1: Enrichment funnel --")
     try:
         df_candidates = run_funnel(
             spark=spark,
@@ -92,8 +92,8 @@ def run_enrichment_pipeline(
         spark.stop()
         return summary
 
-    # ── Step 2: YouTube API live channel snapshot ─────────────────────────────
-    logger.info("── Step 2: YouTube API channel snapshot ──")
+    # -- Step 2: YouTube API live channel snapshot -----------------------------
+    logger.info("-- Step 2: YouTube API channel snapshot --")
     yt = YouTubeClient(mode=mode, per_run_max=max_units)
 
     channel_ids = [r["channel_id"] for r in df_candidates.select("channel_id").collect()]
@@ -111,8 +111,9 @@ def run_enrichment_pipeline(
         summary["errors"].append(f"channel_stats: {exc}")
         # Non-fatal: continue to comment sampling
 
-    # ── Step 3: Comment sampling, loyalty, purchase-intent ───────────────────
-    logger.info("── Step 3: Comment sampling & purchase-intent classification ──")
+    # -- Step 3: Comment sampling, loyalty, purchase-intent -------------------
+    logger.info("-- Step 3: Comment sampling & purchase-intent classification --")
+    df_comments: DataFrame | None = None
     try:
         df_comments = run_comment_sampling(
             spark=spark,
@@ -122,7 +123,7 @@ def run_enrichment_pipeline(
         )
         summary["quota_units_used"] = yt.quota.units_used
 
-        if df_comments.count() > 0:
+        if df_comments is not None and df_comments.count() > 0:
             # Persist comment samples to silver
             comment_out = ecfg["output"]["comment_samples"]
             if mode == "dry_run":
@@ -136,10 +137,10 @@ def run_enrichment_pipeline(
         logger.error("Step 3 FAILED: %s", exc, exc_info=True)
         summary["errors"].append(f"comment_sampling: {exc}")
 
-    # ── Step 4: Label export ──────────────────────────────────────────────────
-    logger.info("── Step 4: Stratified label export ──")
+    # -- Step 4: Label export --------------------------------------------------
+    logger.info("-- Step 4: Stratified label export --")
     try:
-        if df_comments.count() > 0:
+        if df_comments is not None and df_comments.count() > 0:
             n_labels = export_labels_for_annotation(df_comments, ecfg)
             summary["labels_exported"] = n_labels
             logger.info("Step 4 complete: %d rows exported for annotation.", n_labels)
@@ -149,10 +150,10 @@ def run_enrichment_pipeline(
         logger.error("Step 4 FAILED: %s", exc, exc_info=True)
         summary["errors"].append(f"label_export: {exc}")
 
-    # ── Step 5: Audience quality & authenticity ───────────────────────────────
-    logger.info("── Step 5: Audience quality & authenticity checks ──")
+    # -- Step 5: Audience quality & authenticity -------------------------------
+    logger.info("-- Step 5: Audience quality & authenticity checks --")
     try:
-        if df_comments.count() > 0:
+        if df_comments is not None and df_comments.count() > 0:
             df_quality = compute_audience_quality(df_comments, ecfg)
             save_audience_quality(df_quality, ecfg, mode=mode)
             summary["audience_quality_channels"] = df_quality.count()
@@ -214,7 +215,7 @@ def main(argv=None) -> None:
         max_units=args.max_units,
         max_candidates=args.max_candidates,
     )
-    print("\n── Phase 6 Pipeline Summary ──")
+    print("\n-- Phase 6 Pipeline Summary --")
     for k, v in result.items():
         print(f"  {k}: {v}")
 

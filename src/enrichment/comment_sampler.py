@@ -263,10 +263,25 @@ def run_comment_sampling(
 
     if not all_records:
         logger.warning("[Comments] No comment records collected. Returning empty DataFrame.")
-        return spark.createDataFrame([], COMMENT_SCHEMA)
+        fields = ", ".join([f"CAST(NULL AS {f.dataType.simpleString()}) AS {f.name}" for f in COMMENT_SCHEMA.fields])
+        return spark.sql(f"SELECT {fields} WHERE 1=0")
 
-    df = spark.createDataFrame(all_records, schema=COMMENT_SCHEMA)
-    return df
+    # Use JSON-lines staging to avoid PySpark RDD cloudpickle serialization recursion issues on Python 3.14
+    import json
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False, encoding="utf-8") as f:
+        for r in all_records:
+            f.write(json.dumps(r) + "\n")
+        tmp_path = f.name
+
+    import atexit
+    def _cleanup():
+        try:
+            Path(tmp_path).unlink(missing_ok=True)
+        except OSError:
+            pass
+    atexit.register(_cleanup)
+    return spark.read.schema(COMMENT_SCHEMA).json(tmp_path)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -55,10 +55,35 @@ def ecfg():
     return load_enrichment_config()
 
 
+def _create_df_via_json(spark, rows, schema):
+    import atexit
+    import json
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False, encoding="utf-8") as f:
+        for r in rows:
+            if isinstance(r, (tuple, list)):
+                r_dict = {field.name: val for field, val in zip(schema.fields, r)}
+                f.write(json.dumps(r_dict) + "\n")
+            else:
+                f.write(json.dumps(r) + "\n")
+        tmp_path = f.name
+
+    def _cleanup():
+        try:
+            Path(tmp_path).unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    atexit.register(_cleanup)
+    return spark.read.schema(schema).json(tmp_path)
+
+
 def _make_comment_df(spark, rows: list[dict]):
     """Helper to create a comment DataFrame from dicts."""
     from src.enrichment.comment_sampler import COMMENT_SCHEMA
-    return spark.createDataFrame(rows, schema=COMMENT_SCHEMA)
+    return _create_df_via_json(spark, rows, COMMENT_SCHEMA)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -286,7 +311,7 @@ def test_te9_funnel_candidate_cap(spark, ecfg):
         )
         for i in range(n)
     ]
-    df_gold = spark.createDataFrame(rows, schema=schema)
+    df_gold = _create_df_via_json(spark, rows, schema)
 
     # Derive reach_proxy as in funnel.py
     df_gold = df_gold.withColumn(
