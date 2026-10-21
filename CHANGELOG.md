@@ -4,6 +4,41 @@ All notable changes to the **Domain-Aware YouTube Influencer Detection & Promoti
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Phase 8: Streamlit Application & Interactive Discovery Dashboard] - 2026-10-21
+
+### Added
+- **Multi-Page Streamlit Application (`src/app/main.py`, `dashboard.py`)**:
+  - Completely rewritten to read precomputed gold tables (Parquet/CSV) with **zero Spark startup delay** on page loads (`T-A1`).
+  - Modern dark-mode UI with glassmorphic cards, custom typography, status badges, and interactive Plotly visualizations (`src/app/components.py`).
+  - Prominent research and governance disclaimer banner on all views (`"Predicted promotion potential from public data; not measured sales."`).
+- **Discovery & Search Page (`src/app/pages_impl/find_influencers.py`)**:
+  - Pure-Python semantic domain predictor (`src/app/domain_predictor.py`) classifying product briefs into macro and micro-domains without invoking Spark.
+  - Robust handling of empty, whitespace, and odd/corrupted input text (`T-A2`).
+  - Multi-tier filtering (Nano, Micro, Macro, Mega), domain focus thresholds, and score sliders.
+  - Interactive Greedy Knapsack Portfolio Budget Simulator (`src/app/portfolio_optimizer.py`) optimizing campaign reach and spend allocation per CPM rate card.
+  - CSV export for shortlisted candidates.
+- **Creator Intelligence Card Page (`src/app/pages_impl/creator_card.py`)**:
+  - Searchable channel deep-dive with tier badge and promotion potential score gauge.
+  - Interactive radar chart and horizontal bar chart breakdown of the 6 score components.
+  - Sponsorship track record: catalog sponsored count, sponsored view multiplier, and promo lift.
+  - Audience consistency signals: view volatility (CV), upload cadence, and channel longevity.
+  - Partial evidence indicator banner.
+- **Model Registry & Governance Page (`src/app/pages_impl/model_results.py`)**:
+  - Live inspection of `metrics/model_registry.csv` displaying train, validation, and test metrics across domain and influencer classifiers and regression models (`T-A3`).
+  - Zero hardcoded numbers in source code (`T-A4`).
+  - Visual model comparison chart against majority baselines.
+  - Run inspector displaying confusion matrix heatmaps (`confusion_matrix.csv`), parameters, and metrics JSON.
+  - Time-split backtest benchmark comparison table and Plotly bar chart (`metrics/backtest_results.csv`).
+- **Pipeline Operations Page (`src/app/pages_impl/pipeline_status.py`)**:
+  - Quota ledger monitor: daily units consumed vs cap (8,000 units), search calls vs search cap (20 calls).
+  - 30-day retention policy compliance badge (`src/maintenance/purge_api_data.py`).
+  - Recent YouTube API audit log viewer (`logs/api_calls.jsonl`).
+  - Data lake layer health and record counts across Raw, Silver, and Gold partitions.
+- **Phase 8 Smoke Tests (`tests/unit/test_app.py`)**:
+  - 5 tests covering T-A1 (app imports without Spark), T-A2 (empty/odd text handling), T-A3 (sample registry rendering), T-A4 (no hardcoded numbers in metrics page), and end-to-end page rendering.
+
+---
+
 ## [Phase 7: Promotion-Potential Score, Calibration & Time-Split Backtest] - 2026-10-21
 
 ### Added

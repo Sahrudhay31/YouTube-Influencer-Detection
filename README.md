@@ -153,6 +153,21 @@ python -m src.enrichment.pipeline --mode live --max-units 300 --max-candidates 1
 python -m src.ingestion.plan --channels 10 --videos-per-channel 10 --comment-videos 3
 ```
 
+### 6. Launch Interactive Streamlit Discovery Dashboard
+```powershell
+# Run using the root entrypoint
+streamlit run dashboard.py
+
+# Or run directly as a module
+python -m streamlit run src/app/main.py
+```
+Access the application in your browser at `http://localhost:8501`.
+Features include:
+- **🔍 Find Influencers**: Dynamic product brief domain classification, ranked creator leaderboard, and interactive budget portfolio allocator.
+- **👤 Creator Card**: Radar chart breakdown of the 6 score components, sponsorship history, and audience authenticity diagnostics.
+- **📊 Model Results**: Live inspection of `metrics/model_registry.csv`, validation curves, confusion matrices, and time-split backtest benchmarks.
+- **⚙️ Pipeline Status**: Real-time quota consumption gauge, recent API audit log, and 30-day retention compliance monitor.
+
 ---
 
 ## 🛡️ YouTube API Compliance & Privacy Governance
