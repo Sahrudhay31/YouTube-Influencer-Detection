@@ -71,4 +71,25 @@ def get_spark(app_name: str | None = None, local_mode: bool = False):
 
     log_level = cfg.get("log_level", "WARN")
     spark.sparkContext.setLogLevel(log_level)
+
+    # Patch PySpark's DefaultParamsReader to avoid Python 3.14 RDD cloudpickle recursion
+    try:
+        from pyspark.ml.util import DefaultParamsReader
+        import json
+
+        if not getattr(DefaultParamsReader, "_py314_patched", False):
+            def _patched_loadMetadata(path, sc, expectedClassName=""):
+                import os
+                metadata_path = os.path.join(path, "metadata")
+                metadata_str = spark.read.text(metadata_path).first()[0]
+                parsed = json.loads(metadata_str)
+                if expectedClassName and parsed.get("class") != expectedClassName:
+                    raise RuntimeError(f"Expected class {expectedClassName} but got {parsed.get('class')}")
+                return parsed
+
+            DefaultParamsReader.loadMetadata = staticmethod(_patched_loadMetadata)
+            DefaultParamsReader._py314_patched = True
+    except Exception:
+        pass
+
     return spark

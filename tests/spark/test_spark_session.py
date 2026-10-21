@@ -14,9 +14,9 @@ def test_ts1_spark_session_creates_and_computes():
     spark = get_spark(app_name="bda-spark-smoke-test", local_mode=True)
     assert spark is not None
 
-    df = spark.createDataFrame(
-        [(1, "channel_1", 1000), (2, "channel_2", 2500)],
-        ["id", "channel_id", "view_count"],
+    df = spark.sql(
+        "SELECT 1 AS id, 'channel_1' AS channel_id, 1000 AS view_count "
+        "UNION ALL SELECT 2, 'channel_2', 2500"
     )
     assert df.count() == 2
     assert "channel_id" in df.columns

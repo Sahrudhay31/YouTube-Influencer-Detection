@@ -1,0 +1,26 @@
+# config/rate_card.yaml
+# CPM (Cost Per Mille / 1,000 views) rate card by creator size tier
+# Used by src/ranking/portfolio.py for greedy budget allocation
+# Note: In accordance with prompt R1/R10, these are baseline configurable rate cards
+# and can be overridden by user parameters.
+
+source: agent_proposed_industry_benchmarks
+currency: USD
+
+tiers:
+  nano:
+    cpm: 15.00
+    fixed_overhead: 50.00
+    description: "Channels with under 10k subscribers"
+  micro:
+    cpm: 20.00
+    fixed_overhead: 100.00
+    description: "Channels with 10k to 100k subscribers"
+  macro:
+    cpm: 25.00
+    fixed_overhead: 250.00
+    description: "Channels with 100k to 1M subscribers"
+  mega:
+    cpm: 35.00
+    fixed_overhead: 500.00
+    description: "Channels with over 1M subscribers"

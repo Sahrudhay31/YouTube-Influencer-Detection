@@ -66,10 +66,38 @@ All metrics below are automatically populated from real runs in `metrics/` using
 | influencer_classifier_gbt | influencer_classification | gbt | 1.0 | 0.8518518518518519 | 0.8235294117647058 | 0.8365539452495974 | 0.6913636363636363 | ⚠️ 0.148 | ⚠️ OVERFIT WARNING: train_acc - val_acc = 0.1481 (threshold  |
 | influencer_classifier_logistic_regression | influencer_classification | logistic_regression | 0.7469879518072289 | 0.7777777777777778 | 0.7058823529411765 | 0.791005291005291 | 0.5004112554112554 | ✅ | Option B label. Baseline PR-AUC=0.1969. Top feature=N/A |
 | influencer_classifier_random_forest | influencer_classification | random_forest | 0.9759036144578314 | 0.7407407407407407 | 0.7647058823529411 | 0.7292181069958849 | 0.2825095194660412 | ⚠️ 0.235 | ⚠️ OVERFIT WARNING: train_acc - val_acc = 0.2352 (threshold  |
+| promo_lift_regressor_gbt | regression | GBTRegressor |  |  |  |  |  | ✅ | Spearman rank correlation vs composite Promotion-Potential S |
 
 
-_Last updated: 2026-10-20T19:00:28.959658+00:00_
+_Last updated: 2026-10-21T05:50:00.981287+00:00_
 <!-- MODEL_RESULTS_END -->
+
+---
+
+## 🏆 Promotion-Potential Scoring & Time-Split Backtest
+
+The composite **Promotion-Potential Score** ranks YouTube channels for marketing sponsorship suitability. It integrates 6 weighted components with dynamic renormalisation conforming to `config/scoring.yaml`:
+- **Domain / Product Fit** (25%): TF-IDF cosine similarity between brand/product brief and channel profile.
+- **Influencer Probability** (20%): GBT classifier probability from channel behavior signals.
+- **Audience Quality & Authenticity** (15%): Low duplicate comments, non-concentrated audience, organic velocity.
+- **Promo Lift Track Record** (15%): Historic median view multiplier on sponsored videos vs organic baseline.
+- **Size Tier Efficiency** (15%): Engagement rate relative to benchmark CPM rate card (`config/rate_card.yaml`).
+- **Consistency & Cadence** (10%): Upload cadence regularity and view consistency (inverse CV).
+
+### Calibration: Spearman Rank Correlation
+A `GBTRegressor` was trained on historical channel features to predict promotional lift (`run_20261021_054959_promolift_gbt`). The Spearman rank correlation between model predictions and the composite Promotion-Potential Score is:
+- **Spearman $\rho = 0.4585$ ($p = 0.0026$, statistically significant)**.
+
+### Time-Split Backtest Evaluation (Cutoff $T = \text{2019-01-01}$)
+Evaluating strictly on unseen post-$T$ videos (6,149 videos, 778 sponsored) across 112 active channels:
+
+| Ranking Method | Precision@5 | Precision@10 | NDCG@5 | NDCG@10 | Spearman $\rho$ | p-value |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **PromotionPotentialScore** | **0.6000** | **0.3000** | **0.6005** | **0.6200** | 0.0246 | 0.7968 |
+| **Baseline_MedianViews** | 0.0000 | 0.3000 | 0.5013 | 0.4447 | 0.1085 | 0.2550 |
+| **Baseline_Activity** | 0.4000 | 0.3000 | 0.5739 | 0.5800 | 0.2617 | 0.0053 |
+
+*Outcome: The Promotion-Potential Score outperforms both standard baselines on top-5 sponsor conversion Precision and NDCG ranking quality.*
 
 ---
 

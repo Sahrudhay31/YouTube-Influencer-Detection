@@ -9,15 +9,30 @@ Phase 5 Influencer-vs-Normal Classifier smoke tests:
 """
 from __future__ import annotations
 
+import atexit
+import json
+import tempfile
+from pathlib import Path
+
 import pytest
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from pyspark.ml.feature import VectorAssembler
-from pyspark.sql import functions as F
+from pyspark.sql import DataFrame, SparkSession, functions as F
 
 from src.common.spark_session import get_spark
 from src.influencer.features import build_channel_features, load_influencer_config
+
+
+def _safe_df(spark: SparkSession, rows: list[Any], cols: list[str]) -> DataFrame:
+    tf = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8")
+    for r in rows:
+        d = dict(zip(cols, r))
+        tf.write(json.dumps(d) + "\n")
+    tf.close()
+    atexit.register(lambda: Path(tf.name).unlink(missing_ok=True))
+    return spark.read.json(tf.name)
 
 
 @pytest.fixture(scope="module")
@@ -46,18 +61,18 @@ def test_ti2_size_tiers_exhaustive_and_mutually_exclusive(spark):
         ("ch_macro", 50000.0, 2, 0.2),
         ("ch_mega", 500000.0, 5, 0.5),
     ]
-    df_spon = spark.createDataFrame(data, ["channel_id", "median_views", "sponsored_count", "sponsored_rate"])
+    df_spon = _safe_df(spark, data, ["channel_id", "median_views", "sponsored_count", "sponsored_rate"])
 
     # Minimal video data using corresponding view count for each tier
     vid_data = [
         (f"{ch}_v1", ch, 100, views, 10.0, 1.0, "2018-01-01 00:00:00")
         for ch, views, _, _ in data
     ]
-    df_vid = spark.createDataFrame(
-        vid_data, ["display_id", "channel_id", "duration", "view_count", "like_count", "dislike_count", "upload_date"]
+    df_vid = _safe_df(
+        spark, vid_data, ["display_id", "channel_id", "duration", "view_count", "like_count", "dislike_count", "upload_date"]
     )
 
-    df_dom = spark.createDataFrame([(ch, 1.0, 1.0) for ch, _, _, _ in data], ["channel_id", "domain_purity", "in_domain_share"])
+    df_dom = _safe_df(spark, [(ch, 1.0, 1.0) for ch, _, _, _ in data], ["channel_id", "domain_purity", "in_domain_share"])
 
     df_feat = build_channel_features(df_vid, df_dom, df_spon)
     rows = df_feat.select("channel_id", "size_tier").collect()
@@ -96,8 +111,8 @@ def test_ti3_model_beats_baseline_pr_auc(spark):
         "channel_age_days", "upload_cadence_days", "domain_purity", "in_domain_share",
         "label", "class_weight"
     ]
-    train_df = spark.createDataFrame(train_data, cols)
-    val_df = spark.createDataFrame(val_data, cols)
+    train_df = _safe_df(spark, train_data, cols)
+    val_df = _safe_df(spark, val_data, cols)
 
     feature_cols = cols[:8]
     assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
@@ -127,7 +142,7 @@ def test_ti4_class_weights_applied(spark):
     w1_expected = n_total / (2.0 * n_pos)  # 100 / 40 = 2.5
 
     data = [(1.0,) for _ in range(n_pos)] + [(0.0,) for _ in range(n_neg)]
-    df = spark.createDataFrame(data, ["label"])
+    df = _safe_df(spark, data, ["label"])
 
     df_weighted = df.withColumn(
         "class_weight",
@@ -150,11 +165,11 @@ def test_ti5_feature_nulls_handled_no_silent_drops(spark):
         ("v1", "ch_sparse", 100, 500.0, None, None, "2019-01-01 00:00:00"),
         ("v2", "ch_normal", 200, 1000.0, 50.0, 5.0, "2019-01-02 00:00:00"),
     ]
-    df_vid = spark.createDataFrame(
-        vid_data, ["display_id", "channel_id", "duration", "view_count", "like_count", "dislike_count", "upload_date"]
+    df_vid = _safe_df(
+        spark, vid_data, ["display_id", "channel_id", "duration", "view_count", "like_count", "dislike_count", "upload_date"]
     )
-    df_dom = spark.createDataFrame([("ch_sparse", None, None), ("ch_normal", 1.0, 1.0)], ["channel_id", "domain_purity", "in_domain_share"])
-    df_spon = spark.createDataFrame([("ch_sparse", 500.0, 0, 0.0), ("ch_normal", 1000.0, 1, 0.5)], ["channel_id", "median_views", "sponsored_count", "sponsored_rate"])
+    df_dom = _safe_df(spark, [("ch_sparse", None, None), ("ch_normal", 1.0, 1.0)], ["channel_id", "domain_purity", "in_domain_share"])
+    df_spon = _safe_df(spark, [("ch_sparse", 500.0, 0, 0.0), ("ch_normal", 1000.0, 1, 0.5)], ["channel_id", "median_views", "sponsored_count", "sponsored_rate"])
 
     df_feat = build_channel_features(df_vid, df_dom, df_spon)
 

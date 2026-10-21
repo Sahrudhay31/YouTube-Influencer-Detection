@@ -10,11 +10,16 @@ Phase 3 Domain Classifier smoke tests:
 """
 from __future__ import annotations
 
+import atexit
+import json
+import tempfile
+from pathlib import Path
+
 import pytest
 from pyspark.ml import Pipeline, PipelineModel
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.feature import Tokenizer, StopWordsRemover, CountVectorizer, IDF
-from pyspark.sql import functions as F
+from pyspark.sql import DataFrame, SparkSession, functions as F
 
 from src.classification.baselines import evaluate_majority_baseline
 from src.classification.channel_rollup import rollup_channel_domain
@@ -22,6 +27,16 @@ from src.classification.dataset_splitter import split_by_channel
 from src.classification.text_cleaner import clean_video_text
 from src.common.paths import local
 from src.common.spark_session import get_spark
+
+
+def _safe_df(spark: SparkSession, rows: list[Any], cols: list[str]) -> DataFrame:
+    tf = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8")
+    for r in rows:
+        d = dict(zip(cols, r))
+        tf.write(json.dumps(d) + "\n")
+    tf.close()
+    atexit.register(lambda: Path(tf.name).unlink(missing_ok=True))
+    return spark.read.json(tf.name)
 
 
 @pytest.fixture(scope="module")
@@ -39,7 +54,7 @@ def test_tc1_probabilities_sum_to_one(spark):
     for i in range(10, 20):
         data.append((f"ch_{i}", f"gaming minecraft walkthrough speedrun episode {i}", 0.0))
 
-    df = spark.createDataFrame(data, ["channel_id", "text", "label"])
+    df = _safe_df(spark, data, ["channel_id", "text", "label"])
 
     tokenizer = Tokenizer(inputCol="text", outputCol="words")
     remover = StopWordsRemover(inputCol="words", outputCol="filtered_words")
@@ -66,7 +81,7 @@ def test_tc2_no_channel_in_multiple_splits(spark):
         for vid_idx in range(5):
             data.append((f"channel_{ch_idx}", f"video_{ch_idx}_{vid_idx}", 1.0 if ch_idx % 2 == 0 else 0.0))
 
-    df = spark.createDataFrame(data, ["channel_id", "title", "label"])
+    df = _safe_df(spark, data, ["channel_id", "title", "label"])
     train_df, val_df, test_df = split_by_channel(df, ratios=[0.70, 0.15, 0.15], seed=42)
 
     train_channels = set(r["channel_id"] for r in train_df.select("channel_id").distinct().collect())
@@ -95,8 +110,8 @@ def test_tc3_model_beats_majority_baseline(spark):
     for i in range(60, 75):
         val_data.append((f"ch_neg_{i}", f"fortnite gameplay battle royale {i}", 0.0))
 
-    train_df = spark.createDataFrame(train_data, ["channel_id", "text", "label"])
-    val_df = spark.createDataFrame(val_data, ["channel_id", "text", "label"])
+    train_df = _safe_df(spark, train_data, ["channel_id", "text", "label"])
+    val_df = _safe_df(spark, val_data, ["channel_id", "text", "label"])
 
     majority_baseline = evaluate_majority_baseline(train_df, val_df)
 
@@ -126,7 +141,7 @@ def test_tc4_shuffled_label_drops_to_near_chance(spark):
         text_sample = " ".join([words_pool[(i + j) % len(words_pool)] for j in range(4)])
         data.append((f"ch_{i}", text_sample, 1.0 if i < 60 else 0.0))
 
-    df = spark.createDataFrame(data, ["channel_id", "text", "label"])
+    df = _safe_df(spark, data, ["channel_id", "text", "label"])
     # Randomly shuffle labels across the dataset
     df_shuffled = df.withColumn("label", F.when(F.rand(seed=99) > 0.5, 1.0).otherwise(0.0))
 
@@ -151,7 +166,7 @@ def test_tc4_shuffled_label_drops_to_near_chance(spark):
 def test_tc5_saved_model_reloads_with_identical_predictions(spark, tmp_path):
     """T-C5: Saved model reloads from disk and produces identical predictions."""
     data = [(f"ch_{i}", f"text sample {i}", 1.0 if i % 2 == 0 else 0.0) for i in range(10)]
-    df = spark.createDataFrame(data, ["channel_id", "text", "label"])
+    df = _safe_df(spark, data, ["channel_id", "text", "label"])
 
     tokenizer = Tokenizer(inputCol="text", outputCol="words")
     cv = CountVectorizer(inputCol="words", outputCol="features", minDF=1.0)
@@ -181,7 +196,7 @@ def test_tc6_rollup_purity_bounded_zero_to_one(spark):
         ("ch2", 0.0),
         ("ch3", 1.0),
     ]
-    df = spark.createDataFrame(preds_data, ["channel_id", "prediction"])
+    df = _safe_df(spark, preds_data, ["channel_id", "prediction"])
     rollup_df = rollup_channel_domain(df)
 
     for row in rollup_df.collect():

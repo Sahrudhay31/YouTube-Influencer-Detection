@@ -135,6 +135,7 @@ def log_model_run(
     confusion_matrix: list[list[int]] | None = None,
     feature_importance: list[dict[str, Any]] | None = None,
     notes: str = "",
+    run_id: str | None = None,
 ) -> str:
     """
     Log a model run. Returns the run_id.
@@ -145,13 +146,22 @@ def log_model_run(
         If any required metric is missing or NaN.
     """
     # ── Validation ────────────────────────────────────────────────────────────
-    for field in ("train_accuracy", "val_accuracy"):
-        val = locals()[field]
-        if _is_nan_or_none(val):
-            raise ValueError(
-                f"metrics_logger: '{field}' is missing or NaN for model '{model_name}'. "
-                "Training must produce a real metric before logging."
-            )
+    if task == "regression":
+        for field in ("train_rmse", "val_rmse"):
+            val = locals()[field]
+            if _is_nan_or_none(val):
+                raise ValueError(
+                    f"metrics_logger: '{field}' is missing or NaN for model '{model_name}'. "
+                    "Regression training must produce a real metric before logging."
+                )
+    else:
+        for field in ("train_accuracy", "val_accuracy"):
+            val = locals()[field]
+            if _is_nan_or_none(val):
+                raise ValueError(
+                    f"metrics_logger: '{field}' is missing or NaN for model '{model_name}'. "
+                    "Training must produce a real metric before logging."
+                )
 
     # ── Overfit check ─────────────────────────────────────────────────────────
     overfit_gap: float | None = None
@@ -178,7 +188,7 @@ def log_model_run(
             )
 
     # ── Build run record ──────────────────────────────────────────────────────
-    run_id = str(uuid.uuid4())[:12]
+    run_id = run_id or str(uuid.uuid4())[:12]
     timestamp_utc = datetime.now(timezone.utc).isoformat()
     git_commit = _git_commit()
 

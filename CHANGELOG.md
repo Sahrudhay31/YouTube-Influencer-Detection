@@ -4,6 +4,43 @@ All notable changes to the **Domain-Aware YouTube Influencer Detection & Promoti
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Phase 7: Promotion-Potential Score, Calibration & Time-Split Backtest] - 2026-10-21
+
+### Added
+- **CPM Rate Card Config (`config/rate_card.yaml`)**:
+  - Benchmark CPM rates by channel size tier: Nano ($15), Micro ($20), Macro ($25), Mega ($35).
+- **Product Fit Scoring Engine (`src/ranking/fit_score.py`)**:
+  - Vectorizes product brief using Spark ML Tokenizer, StopWordsRemover, CountVectorizer, and IDF.
+  - Computes cosine similarity between brief vector and channel text profile vectors.
+- **Promotion-Potential Score Engine (`src/ranking/score.py`)**:
+  - Computes 6-component composite score according to `config/scoring.yaml`:
+    - Domain/Product Fit (25%)
+    - Influencer Probability (20%)
+    - Size Tier Efficiency (15%)
+    - Audience Authenticity (15%)
+    - Promo Lift Track Record (15%)
+    - Consistency & Cadence (10%)
+  - Dynamic weight renormalisation when components are unavailable.
+  - Deducts penalties for authenticity flag breaches (-15 pts) and promo lift decay (-10 pts).
+  - Within-domain and within-tier percentile normalization (`percentile_rank`).
+- **Calibration Regressor (`src/models/promo_lift_regressor.py`)**:
+  - Trained `GBTRegressor` on channel features to predict promotional lift (`run_20261021_054959_promolift_gbt`).
+  - Test RMSE = 7.4158, Test MAE = 7.0063.
+  - Statistically significant rank alignment with composite Promotion-Potential Score: Spearman $\rho = 0.4585$ ($p = 0.0026$).
+- **Time-Split Backtest Evaluation (`src/ranking/backtest.py`)**:
+  - Evaluated on temporal holdout with cutoff $T = \text{2019-01-01}$ (asserts historical features use strictly $\le T$).
+  - Evaluated on 6,149 post-$T$ videos across 112 active channels.
+  - Promotion-Potential Score beats baselines:
+    - **Precision@5 = 0.6000** (vs 0.0000 for MedianViews, 0.4000 for Activity).
+    - **NDCG@5 = 0.6005** (vs 0.5013 for MedianViews, 0.5739 for Activity).
+- **Greedy Portfolio Optimizer (`src/ranking/portfolio.py`)**:
+  - Budget-constrained channel selection using score-per-dollar efficiency.
+  - Enforces tier diversification caps and CPM cost modeling.
+- **Phase 7 Test Suite (`tests/spark/test_ranking.py`)**:
+  - Tests T-R1 through T-R6 and portfolio allocator: weight summation, determinism, missing component renormalisation, percentile bounds, temporal leakage guard, and NDCG hand fixtures.
+
+---
+
 ## [Phase 6: Live Enrichment Funnel, Comments & Audience Quality] - 2026-10-21
 
 ### Added

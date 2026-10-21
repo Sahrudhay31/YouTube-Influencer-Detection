@@ -11,6 +11,7 @@
 | influencer_classifier_gbt | influencer_classification | gbt | 1.0 | 0.8518518518518519 | 0.8235294117647058 | 0.8365539452495974 | 0.6913636363636363 | ⚠️ 0.148 | ⚠️ OVERFIT WARNING: train_acc - val_acc = 0.1481 (threshold  |
 | influencer_classifier_logistic_regression | influencer_classification | logistic_regression | 0.7469879518072289 | 0.7777777777777778 | 0.7058823529411765 | 0.791005291005291 | 0.5004112554112554 | ✅ | Option B label. Baseline PR-AUC=0.1969. Top feature=N/A |
 | influencer_classifier_random_forest | influencer_classification | random_forest | 0.9759036144578314 | 0.7407407407407407 | 0.7647058823529411 | 0.7292181069958849 | 0.2825095194660412 | ⚠️ 0.235 | ⚠️ OVERFIT WARNING: train_acc - val_acc = 0.2352 (threshold  |
+| promo_lift_regressor_gbt | regression | GBTRegressor |  |  |  |  |  | ✅ | Spearman rank correlation vs composite Promotion-Potential S |
 
 
-_Last updated: 2026-10-20T19:00:28.959658+00:00_
+_Last updated: 2026-10-21T05:50:00.981287+00:00_

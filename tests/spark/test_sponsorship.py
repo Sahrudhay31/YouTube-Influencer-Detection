@@ -63,11 +63,10 @@ def test_ts1_handwritten_fixtures_classification():
 def test_ts2_promo_lift_null_when_too_few_videos(spark):
     """T-S2: promo-lift returns null when a channel has fewer than minimum required videos."""
     # Channel has only 1 sponsored and 1 non-sponsored (threshold requires >= 3 each)
-    data = [
-        ("ch_sparse", True, 5000.0),
-        ("ch_sparse", False, 4000.0),
-    ]
-    df = spark.createDataFrame(data, ["channel_id", "is_sponsored", "view_count"])
+    df = spark.sql(
+        "SELECT 'ch_sparse' AS channel_id, true AS is_sponsored, 5000.0 AS view_count "
+        "UNION ALL SELECT 'ch_sparse', false, 4000.0"
+    )
     lift_df = compute_channel_promo_lift(df, min_sponsored=3, min_nonsponsored=3)
 
     row = lift_df.filter(F.col("channel_id") == "ch_sparse").first()
@@ -83,15 +82,14 @@ def test_ts3_promo_lift_matches_hand_computed_value(spark):
     # Channel with 3 sponsored videos: views [1000, 2000, 3000] -> median = 2000
     # and 3 non-sponsored videos: views [500, 1000, 1500] -> median = 1000
     # Expected promo_lift = 2000 / 1000 = 2.0
-    data = [
-        ("ch_ideal", True, 1000.0),
-        ("ch_ideal", True, 2000.0),
-        ("ch_ideal", True, 3000.0),
-        ("ch_ideal", False, 500.0),
-        ("ch_ideal", False, 1000.0),
-        ("ch_ideal", False, 1500.0),
-    ]
-    df = spark.createDataFrame(data, ["channel_id", "is_sponsored", "view_count"])
+    df = spark.sql(
+        "SELECT 'ch_ideal' AS channel_id, true AS is_sponsored, 1000.0 AS view_count "
+        "UNION ALL SELECT 'ch_ideal', true, 2000.0 "
+        "UNION ALL SELECT 'ch_ideal', true, 3000.0 "
+        "UNION ALL SELECT 'ch_ideal', false, 500.0 "
+        "UNION ALL SELECT 'ch_ideal', false, 1000.0 "
+        "UNION ALL SELECT 'ch_ideal', false, 1500.0"
+    )
     lift_df = compute_channel_promo_lift(df, min_sponsored=3, min_nonsponsored=3)
 
     row = lift_df.filter(F.col("channel_id") == "ch_ideal").first()
@@ -103,15 +101,14 @@ def test_ts3_promo_lift_matches_hand_computed_value(spark):
 
 def test_ts4_no_division_by_zero(spark):
     """T-S4: No division by zero: returns null if non-sponsored baseline median is 0."""
-    data = [
-        ("ch_zero_base", True, 1000.0),
-        ("ch_zero_base", True, 2000.0),
-        ("ch_zero_base", True, 3000.0),
-        ("ch_zero_base", False, 0.0),
-        ("ch_zero_base", False, 0.0),
-        ("ch_zero_base", False, 0.0),
-    ]
-    df = spark.createDataFrame(data, ["channel_id", "is_sponsored", "view_count"])
+    df = spark.sql(
+        "SELECT 'ch_zero_base' AS channel_id, true AS is_sponsored, 1000.0 AS view_count "
+        "UNION ALL SELECT 'ch_zero_base', true, 2000.0 "
+        "UNION ALL SELECT 'ch_zero_base', true, 3000.0 "
+        "UNION ALL SELECT 'ch_zero_base', false, 0.0 "
+        "UNION ALL SELECT 'ch_zero_base', false, 0.0 "
+        "UNION ALL SELECT 'ch_zero_base', false, 0.0"
+    )
     lift_df = compute_channel_promo_lift(df, min_sponsored=3, min_nonsponsored=3)
 
     row = lift_df.filter(F.col("channel_id") == "ch_zero_base").first()

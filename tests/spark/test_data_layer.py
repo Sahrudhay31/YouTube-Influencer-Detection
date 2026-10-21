@@ -26,8 +26,11 @@ def spark():
 
 def test_td1_write_read_round_trip(spark, tmp_path):
     """T-D1: Write -> read round trip equals the input."""
-    test_data = [(1, "vid_1", 100), (2, "vid_2", 200), (3, "vid_3", 300)]
-    df = spark.createDataFrame(test_data, ["id", "display_id", "views"])
+    df = spark.sql(
+        "SELECT 1 AS id, 'vid_1' AS display_id, 100 AS views "
+        "UNION ALL SELECT 2, 'vid_2', 200 "
+        "UNION ALL SELECT 3, 'vid_3', 300"
+    )
     
     out_dir = str(tmp_path / "round_trip.parquet")
     df.write.mode("overwrite").parquet(out_dir)
@@ -67,7 +70,7 @@ def test_td3_no_duplicate_video_ids(spark):
 def test_td5_idempotent_write(spark, tmp_path):
     """T-D5: Job re-run with overwrite is idempotent."""
     out_dir = str(tmp_path / "idempotent.parquet")
-    df = spark.createDataFrame([(1, "a"), (2, "b")], ["id", "val"])
+    df = spark.sql("SELECT 1 AS id, 'a' AS val UNION ALL SELECT 2, 'b'")
     
     # Run 1
     df.write.mode("overwrite").parquet(out_dir)
