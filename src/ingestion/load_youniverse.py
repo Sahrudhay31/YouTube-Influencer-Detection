@@ -105,18 +105,88 @@ def load_youniverse(
     else:
         logger.warning("yt_metadata_en.jsonl.gz not found in %s — skipping.", raw_path)
 
-    # ── Timeseries (df_timeseries_en.csv.gz) ─────────────────────────────────
-    ts_raw = raw_path / "df_timeseries_en.csv.gz"
+    # ── Channels (df_channels_en.tsv.gz / df_channels_en.csv.gz) ──────────────
+    ch_raw = raw_path / "df_channels_en.tsv.gz"
+    if not ch_raw.exists():
+        ch_raw = raw_path / "df_channels_en.csv.gz"
+
+    if ch_raw.exists():
+        t0 = time.time()
+        logger.info("Loading channels: %s", ch_raw)
+        delim = "\t" if ch_raw.name.endswith(".tsv.gz") else ","
+        df_ch = (
+            spark.read
+            .option("header", "true")
+            .option("delimiter", delim)
+            .option("compression", "gzip")
+            .csv(str(ch_raw))
+        )
+        # Standardize column names to channel_id, channel_name, subscribers, category, join_date
+        if "channel" in df_ch.columns:
+            df_ch = df_ch.withColumnRenamed("channel", "channel_id")
+        if "name_cc" in df_ch.columns:
+            df_ch = df_ch.withColumnRenamed("name_cc", "channel_name")
+        if "subscribers_cc" in df_ch.columns:
+            from pyspark.sql import functions as F
+            df_ch = df_ch.withColumn("subscribers", F.col("subscribers_cc").cast("long"))
+        if "category_cc" in df_ch.columns:
+            df_ch = df_ch.withColumnRenamed("category_cc", "category")
+        if "videos_cc" in df_ch.columns:
+            df_ch = df_ch.withColumnRenamed("videos_cc", "videos")
+
+        logger.info("Channels raw schema: %s", df_ch.schema.simpleString())
+        raw_ch_count = df_ch.count()
+        logger.info("Channels raw row count: %d", raw_ch_count)
+
+        if frac < 1.0:
+            df_ch = df_ch.sample(fraction=frac, seed=seed)
+        if max_rows and max_rows < raw_ch_count:
+            df_ch = df_ch.limit(max_rows)
+
+        sample_count = df_ch.count()
+        if local_mode:
+            out_path = str(local("silver", "youniverse_channels"))
+        else:
+            out_path = hdfs("silver", "youniverse_channels")
+
+        mode = "overwrite" if overwrite else "ignore"
+        df_ch.write.mode(mode).parquet(out_path)
+
+        verify_count = spark.read.parquet(out_path).count()
+        if verify_count != sample_count:
+            raise RuntimeError(
+                f"Channels row count mismatch: wrote {sample_count}, read back {verify_count}."
+            )
+        logger.info(
+            "[OK] Channels written to %s. Rows: %d. Time: %.1fs",
+            out_path, verify_count, time.time() - t0
+        )
+        results["channels"] = verify_count
+    else:
+        logger.info("df_channels_en.tsv.gz not present in %s — skipping.", raw_path)
+
+    # ── Timeseries (df_timeseries_en.tsv.gz / df_timeseries_en.csv.gz) ───────
+    ts_raw = raw_path / "df_timeseries_en.tsv.gz"
+    if not ts_raw.exists():
+        ts_raw = raw_path / "df_timeseries_en.csv.gz"
+    if not ts_raw.exists():
+        ts_raw = raw_path / "_raw_df_timeseries.tsv.gz"
+
     if ts_raw.exists():
         t0 = time.time()
         logger.info("Loading timeseries: %s", ts_raw)
+        delim = "\t" if (".tsv" in ts_raw.name) else ","
 
         df_ts = (
             spark.read
             .option("header", "true")
+            .option("delimiter", delim)
             .option("compression", "gzip")
             .csv(str(ts_raw))
         )
+        if "channel" in df_ts.columns:
+            df_ts = df_ts.withColumnRenamed("channel", "channel_id")
+
         logger.info("Timeseries raw schema: %s", df_ts.schema.simpleString())
 
         raw_ts_count = df_ts.count()
@@ -148,7 +218,7 @@ def load_youniverse(
         )
         results["timeseries"] = verify_count
     else:
-        logger.info("df_timeseries_en.csv.gz not present in %s (optional for initial metadata run).", raw_path)
+        logger.info("Timeseries file not present in %s — skipping.", raw_path)
 
     spark.stop()
     return results

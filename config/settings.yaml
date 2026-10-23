@@ -27,6 +27,11 @@ data:
   seed: 42
   # Train / val / test split ratios (by channel, not by video)
   split_ratios: [0.70, 0.15, 0.15]
+  # Channel-hash sampling configuration (Phase R2)
+  sample_basis_points: 1000
+  sample_salt: "bda_beauty_salt_2026"
+  sample_version: "chash_v1_10pct"
+  sample_max_disk_gb: 10.0
 
 # ── RETENTION ─────────────────────────────────────────────────────────────────
 retention:
