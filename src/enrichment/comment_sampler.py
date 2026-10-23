@@ -67,13 +67,22 @@ def _hash_author_id(raw_author_id: str, salt: str) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+_OLD_LEAKED_SALT_FINGERPRINT = "9dd0b8f06033de1a27a076c1d4d17e068a48a79b7a669c8aab8ce9b102096721"
+
+
 def get_hash_salt() -> str:
-    """Read salt from environment variable; raise if unset."""
-    salt = os.environ.get("COMMENT_HASH_SALT", "")
+    """Read salt from environment variable; raise if unset or equals old leaked salt."""
+    salt = os.environ.get("COMMENT_HASH_SALT", "").strip()
     if not salt:
         raise EnvironmentError(
             "COMMENT_HASH_SALT env var is not set. "
             "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+        )
+    salt_fp = hashlib.sha256(salt.encode("utf-8")).hexdigest()
+    if salt_fp == _OLD_LEAKED_SALT_FINGERPRINT:
+        raise ValueError(
+            "COMMENT_HASH_SALT matches the old compromised salt from git history. "
+            "Generate a fresh salt with: python -c \"import secrets; print(secrets.token_hex(32))\""
         )
     return salt
 

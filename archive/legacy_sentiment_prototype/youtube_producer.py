@@ -9,7 +9,7 @@ from googleapiclient.errors import HttpError
 from confluent_kafka import Producer, KafkaException
 
 # --- CONFIGURATION ---
-YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY', 'AIzaSyA-KRwYLARjMWJOEI3Yl1LTnomNpSiS5tg')
+YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY', 'REDACTED')
 KAFKA_TOPIC = os.getenv('KAFKA_TOPIC', 'raw-social')
 KAFKA_BROKER = os.getenv('KAFKA_BROKER', 'localhost:9092')
 

@@ -34,7 +34,7 @@ All key architectural decisions for the **Domain-Aware YouTube Influencer Detect
 ## ADR-004: Direct Local Dataset Ingestion for YouNiverse
 - **Date:** 2026-10-20
 - **Status:** Accepted
-- **Context:** User downloaded `yt_metadata_en.jsonl.gz` (13.63 GB) to `C:\Users\SAHRUHDAY CHIRRA\Downloads\yt_metadata_en.jsonl.gz`. Host disk free space is ~39 GB.
+- **Context:** User downloaded `yt_metadata_en.jsonl.gz` (13.63 GB) to `<your-downloads-path>/yt_metadata_en.jsonl.gz`. Host disk free space is ~39 GB.
 - **Decision:** Ingest directly from local downloads path into Spark DataFrame; sample according to `dev_sample_fraction` (0.01) and `dev_sample_max_rows` (50,000) into partitioned Parquet.
 - **Consequences:** Avoids duplicating 13.6 GB across disk drives; prevents disk exhaustion while preserving 100% data fidelity.
 

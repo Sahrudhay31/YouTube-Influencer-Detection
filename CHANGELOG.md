@@ -4,6 +4,25 @@ All notable changes to the **Domain-Aware YouTube Influencer Detection & Promoti
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Phase R1: Security and Hygiene Remediation] - 2026-10-23
+
+### Fixed
+- **API Key Redaction (F1)**: Redacted plaintext YouTube API key in `archive/legacy_sentiment_prototype/youtube_producer.py:12` to `REDACTED` and updated archive documentation.
+- **Comment Hash Salt Sanitization (F2)**: Replaced real 64-hex salt in `.env.example` with empty placeholder and secure generation instructions.
+- **Personal Windows Path Removal (F3)**: Refactored `scripts/extract_dev_sample.py` to accept CLI `--source` and `YOUNIVERSE_SOURCE_PATH` env var; sanitized personal paths in `docs/DECISIONS.md`, `docs/REMEDIATION_AUDIT.md`, and `docs/REPORT_NUMBERS.md`.
+
+### Added
+- **Broadened Verification Scanner (`scripts/check_all.py`)**:
+  - Expanded secrets scan to cover `archive/`, `docs/`, `config/`, and `.env.example`.
+  - Added automated detection for 64-hex strings in `.env.example`.
+  - Added automated detection for hardcoded personal paths (`C:\Users\`, `/home/<name>`) across tracked files.
+- **Hygiene Test Suite (`tests/unit/test_hygiene.py`)**:
+  - `T-H1`: Scanner detects planted API keys in `archive/` and `docs/`.
+  - `T-H2`: Verifies `.env.example` contains no 64-hex salt strings.
+  - `T-H3`: Verifies zero personal user paths across tracked files.
+  - `T-H4`: Verifies `scripts/extract_dev_sample.py` reads `YOUNIVERSE_SOURCE_PATH`.
+  - `T-H5`: Verifies comment hashing refuses empty or leaked salt fingerprints.
+
 ## [Phase 9: Scalability Benchmark & Final Documentation] - 2026-10-21
 
 ### Added

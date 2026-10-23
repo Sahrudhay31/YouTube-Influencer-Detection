@@ -19,7 +19,7 @@ This document catalogs every single empirical metric, dataset count, and evaluat
 ## 2. Model Evaluation Numbers
 
 ### 2.1 Domain Classification Models
-Source: [`metrics/model_registry.csv`](file:///c:/Users/SAHRUHDAY%20CHIRRA/Downloads/New%20folder/bda_project/metrics/model_registry.csv)
+Source: [`metrics/model_registry.csv`](../metrics/model_registry.csv)
 
 | Algorithm | Train Acc | Val Acc | Test Acc | Val Macro F1 | Majority Baseline | Registry Run ID |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
@@ -28,7 +28,7 @@ Source: [`metrics/model_registry.csv`](file:///c:/Users/SAHRUHDAY%20CHIRRA/Downl
 | **Logistic Regression** | 0.9990 | **0.9131** | 0.9674 | 0.8955 | 0.6500 | `9c1fea01-f2b` |
 
 ### 2.2 Influencer Classification Models (Option B Ground Truth)
-Source: [`metrics/model_registry.csv`](file:///c:/Users/SAHRUHDAY%20CHIRRA/Downloads/New%20folder/bda_project/metrics/model_registry.csv)
+Source: [`metrics/model_registry.csv`](../metrics/model_registry.csv)
 
 | Algorithm | Val Acc | Test Acc | Val Macro F1 | Val PR-AUC | Baseline PR-AUC | Val ROC-AUC | Registry Run ID |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
@@ -39,7 +39,7 @@ Source: [`metrics/model_registry.csv`](file:///c:/Users/SAHRUHDAY%20CHIRRA/Downl
 *Takeaway:* GBT beats baseline PR-AUC (0.1969) by **+351%**, with balanced class weights ($w_0 = 0.623, w_1 = 2.540$).
 
 ### 2.3 Calibration Regressor (Promotional Lift Prediction)
-Source: [`metrics/model_registry.csv:row 10`](file:///c:/Users/SAHRUHDAY%20CHIRRA/Downloads/New%20folder/bda_project/metrics/model_registry.csv), run `run_20261021_054959_promolift_gbt`
+Source: [`metrics/model_registry.csv:row 10`](../metrics/model_registry.csv), run `run_20261021_054959_promolift_gbt`
 
 - **Test RMSE:** 7.4158
 - **Test MAE:** 7.0063
@@ -49,7 +49,7 @@ Source: [`metrics/model_registry.csv:row 10`](file:///c:/Users/SAHRUHDAY%20CHIRR
 
 ## 3. Time-Split Backtest Numbers (Cutoff $T = \text{2019-01-01}$)
 
-Source: [`metrics/backtest_results.csv`](file:///c:/Users/SAHRUHDAY%20CHIRRA/Downloads/New%20folder/bda_project/metrics/backtest_results.csv) & [`metrics/latest_backtest.md`](file:///c:/Users/SAHRUHDAY%20CHIRRA/Downloads/New%20folder/bda_project/metrics/latest_backtest.md)
+Source: [`metrics/backtest_results.csv`](../metrics/backtest_results.csv) & [`metrics/latest_backtest.md`](../metrics/latest_backtest.md)
 
 - **Pre-$T$ Historical Training Videos:** 43,851 records (upload_date $\le$ 2019-01-01)
 - **Post-$T$ Evaluation Videos:** 6,149 records (778 sponsored)
@@ -67,7 +67,7 @@ Source: [`metrics/backtest_results.csv`](file:///c:/Users/SAHRUHDAY%20CHIRRA/Dow
 
 ## 4. Scalability & Storage Format Benchmarks
 
-Source: [`metrics/scalability.csv`](file:///c:/Users/SAHRUHDAY%20CHIRRA/Downloads/New%20folder/bda_project/metrics/scalability.csv)
+Source: [`metrics/scalability.csv`](../metrics/scalability.csv)
 
 ### 4.1 Worker Core Scalability (Feature Aggregation over 50,000 Records)
 | Cores / Config | Elapsed Time | Speedup | Throughput (Records/Sec) | Parallel Efficiency |

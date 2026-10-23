@@ -12,14 +12,14 @@ These files are the **original prototype** that preceded the YouTube Influencer 
 
 ## Why These Files Are Kept (Not Deleted)
 
-- Audit trail: the git history contains a leaked API key (`AIzaSyA-...`) in `youtube_producer.py:12`. **Revoke this key immediately if you haven't already.**
+- Audit trail: the git history originally contained a leaked API key in `youtube_producer.py:12` (now redacted to `REDACTED`). **Revoke that key in Google Cloud Console if not already done.**
 - The files preserve the original architecture decisions for reference.
 
 ## Files in This Archive
 
 | File | Issue |
 |------|-------|
-| `youtube_producer.py` | Hardcoded API key (line 12); `publish_fallback_comments_for_query()` (line 281) injects fake comments |
+| `youtube_producer.py` | Plaintext API key redacted in Phase R1 (line 12); `publish_fallback_comments_for_query()` (line 281) injects fake comments |
 | `spark_processor.py` | HuggingFace models in per-row UDFs; silent HDFS fallback to local |
 | `dashboard.py` | Reads synthetic CSVs; starts Spark inside Streamlit |
 | `domain_config.yaml` | Mixes domain keywords with sentiment/moral words (`sellout`, `overhyped`) |

@@ -18,32 +18,70 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 def run_secrets_scan() -> bool:
-    print("[1/4] Running secrets scan...")
+    print("[1/4] Running broadened secrets & hygiene scan (F1, F2, F3)...")
     key_regex = re.compile(r"AIza[0-9A-Za-z-_]{35}")
-    violations = []
+    hex64_regex = re.compile(r"\b[0-9a-fA-F]{64}\b")
+    # Flag personal paths like C:\Users\<name> or /home/<name>, ignoring generic placeholders like <username>
+    personal_path_regex = re.compile(r"(?:[A-Za-z]:[\\/][Uu]sers[\\/](?!<)[A-Za-z0-9_ -]+|/home/(?!<)[A-Za-z0-9_ -]+)")
+    
+    key_violations = []
+    salt_violations = []
+    path_violations = []
 
     for path in ROOT.rglob("*"):
         if not path.is_file():
             continue
-        # Skip archive, git, venv, pycache, state, logs
         rel = str(path.relative_to(ROOT)).replace("\\", "/")
-        if rel == ".env" or any(rel.startswith(p) for p in ["archive/", ".git/", ".venv/", "venv/", "__pycache__/", "state/", "logs/"]):
+        # Never scan git, venvs, pycache, binaries, runtime state/logs, or private .env
+        if (
+            rel == ".env"
+            or path.suffix in [".pyc", ".pyo", ".pyd", ".png", ".jpg", ".parquet"]
+            or "__pycache__" in rel
+            or any(rel.startswith(p) for p in [".git/", ".venv/", "venv/", "state/", "logs/"])
+        ):
             continue
         try:
             content = path.read_text(encoding="utf-8", errors="ignore")
             for line_no, line in enumerate(content.splitlines(), 1):
+                # 1. API Keys (scans everywhere including archive/, docs/, config/)
                 if key_regex.search(line):
-                    violations.append(f"{rel}:{line_no}")
+                    key_violations.append(f"{rel}:{line_no}")
+                # 2. Salt in .env.example
+                if rel == ".env.example" and hex64_regex.search(line):
+                    salt_violations.append(f"{rel}:{line_no}")
+                # 3. Personal paths in tracked files (excluding binary/cache/raw data/fixtures)
+                if not any(rel.startswith(p) for p in ["data/", "tests/fixtures/"]):
+                    if personal_path_regex.search(line):
+                        path_violations.append(f"{rel}:{line_no}")
         except Exception:
             pass
 
-    if violations:
-        print(f"[-] FAILED: Found potential API keys in:")
-        for v in violations:
+    failed = False
+    if key_violations:
+        print("[-] FAILED: Found plaintext API keys in:")
+        for v in key_violations:
             print(f"    {v}")
-        return False
-    print("  [OK] Secrets scan passed: No API keys found outside archive/.")
-    return True
+        failed = True
+    else:
+        print("  [OK] No plaintext API keys found (including in archive/, docs/, config/).")
+
+    if salt_violations:
+        print("[-] FAILED: Found real 64-hex salt in .env.example:")
+        for v in salt_violations:
+            print(f"    {v}")
+        failed = True
+    else:
+        print("  [OK] .env.example contains no 64-hex values.")
+
+    if path_violations:
+        print("[-] FAILED: Found hardcoded personal paths in:")
+        for v in path_violations:
+            print(f"    {v}")
+        failed = True
+    else:
+        print("  [OK] No hardcoded personal paths found in tracked files.")
+
+    return not failed
 
 
 def run_single_import_check() -> bool:

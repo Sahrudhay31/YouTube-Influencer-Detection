@@ -62,13 +62,13 @@
 - **Evidence:**
   1. `scripts/extract_dev_sample.py` line 16:
      ```python
-     source_file = Path(r"C:\Users\SAHRUHDAY CHIRRA\Downloads\yt_metadata_en.jsonl.gz")
+     source_file = Path(r"C:\Users\<username>\Downloads\yt_metadata_en.jsonl.gz")
      ```
   2. `docs/DECISIONS.md` line 37 (ADR-004):
      ```markdown
-     Context: User downloaded yt_metadata_en.jsonl.gz (13.63 GB) to C:\Users\SAHRUHDAY CHIRRA\Downloads\yt_metadata_en.jsonl.gz.
+     Context: User downloaded yt_metadata_en.jsonl.gz (13.63 GB) to C:\Users\<username>\Downloads\yt_metadata_en.jsonl.gz.
      ```
-  Personal Windows user paths are hardcoded in both executable code and project documentation.
+  Personal Windows user paths were hardcoded in both executable code and project documentation.
 
 ---
 
