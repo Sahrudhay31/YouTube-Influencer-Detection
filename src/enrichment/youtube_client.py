@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import random
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -210,11 +211,13 @@ class YouTubeClient:
             _log_api_call(endpoint_key, params, status=0, units=units, error="DRY_RUN")
             return {"items": [], "_dry_run": True}
 
-        url = f"{_API_BASE}/{resource.replace('.', '/')}"
-        params = {**params, "key": self._key}
+        # YouTube Data API v3 REST endpoint is the resource name (e.g. search, channels, videos)
+        endpoint_path = resource.split(".")[0]
+        url = f"{_API_BASE}/{endpoint_path}"
+        req_params = {**params, "key": self._key}
 
         def _do_request():
-            resp = self._session.get(url, params=params, timeout=15)
+            resp = self._session.get(url, params=req_params, timeout=15)
             resp.raise_for_status()
             return resp.json()
 
@@ -224,9 +227,11 @@ class YouTubeClient:
             _log_api_call(endpoint_key, params, status=200, units=units)
             return data
         except requests.HTTPError as exc:
+            # Sanitize any API key from exception text to enforce R9 secrets rule
+            sanitized_err = re.sub(r'key=[^&\s]+', 'key=REDACTED', str(exc))
             code = exc.response.status_code if exc.response is not None else 0
-            _log_api_call(endpoint_key, params, status=code, units=units, error=str(exc))
-            raise
+            _log_api_call(endpoint_key, params, status=code, units=units, error=sanitized_err)
+            raise requests.HTTPError(sanitized_err, response=exc.response) from None
 
     # ── Public API methods ────────────────────────────────────────────────────
 
@@ -269,6 +274,32 @@ class YouTubeClient:
         items = data.get("items", [])
         logger.debug("[YT] get_top_videos(%s): %d videos", channel_id, len(items))
         return items
+
+    def search_creators(
+        self,
+        query: str,
+        max_results: int = 25,
+        language: str = "en",
+        region_code: str = "US",
+    ) -> list[dict]:
+        """
+        Discover creator channels for a search query using search.list (type=video).
+        Returns video items with channelId and channelTitle (real channel name).
+        Cost: 100 quota units per call.
+        """
+        params = {
+            "part": "snippet",
+            "q": query,
+            "type": "video",
+            "maxResults": min(max_results, 50),
+            "relevanceLanguage": language,
+            "regionCode": region_code,
+        }
+        data = self._get("search.list", params)
+        items = data.get("items", [])
+        logger.info("[YT] search_creators('%s'): found %d video items.", query, len(items))
+        return items
+
 
     def iter_comment_threads(
         self,

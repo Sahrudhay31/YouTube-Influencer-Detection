@@ -4,6 +4,36 @@ All notable changes to the **Domain-Aware YouTube Influencer Detection & Promoti
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Phase R6: Live Creator Discovery & Real-Time YouTube API] - 2026-10-23
+
+### Added
+- **Deterministic Query Builder (`src/discovery/query_builder.py`)**:
+  - Deterministically maps brand briefs and beauty lexicon keywords (skincare, makeup, haircare) to high-intent creator search queries.
+- **Candidate Discovery Engine (`src/discovery/candidate_discovery.py`)**:
+  - Supports dual discovery: offline YouNiverse cohort (0 units) and quota-guarded live YouTube Data API v3 (`search.list` + `channels.list`).
+  - Fetches real live channel names (`snippet.title`), live subscriber counts, handles, and thumbnails.
+  - Automatically scores topical beauty focus and calculates real-time promotion potential.
+- **Discovery CLI Runner (`src/discovery/run.py`)**:
+  - Standalone CLI command supporting `--brief`, `--mode dry_run|live`, `--max-units`.
+- **Streamlit Live Discovery Tab (`src/app/pages_impl/find_influencers.py`)**:
+  - Interactive web UI tab for live creator discovery with dry-run quota estimation, quota ledger monitoring, and channel cards.
+- **Unit Test Suite (`tests/unit/test_discovery.py`)**:
+  - `T-L6`: Deterministic and bounded query builder.
+  - `T-L7`: Verified offline channel names and scores.
+  - `T-L8`: Dry-run makes zero network calls.
+  - `T-L9`: Empty and odd product briefs handled gracefully.
+
+## [Phase R2: Representative Channel-Hash Sampling & Richer Data Ingestion] - 2026-10-23
+
+### Added
+- **10% Channel-Hash Ingestion (`src/ingestion/sample_youniverse.py`, `scripts/build_gold_cohort.py`)**:
+  - Ingested 13,710 channels and 7.14M video records via streaming Gzip CRC32 hashing.
+  - Extracted verified human-readable channel names (`name_cc`) and true subscriber counts (`subscribers_cc`).
+  - Rebuilt gold tables (`scored_creators.parquet`, `scored_creators.csv`) containing 2,615 beauty influencers with verified names (e.g., Kylie Cosmetics, James Charles, Andrea Russett, Vogue, Emily Noel).
+- **Channel Name Search in UI (`src/app/pages_impl/find_influencers.py`)**:
+  - Added real-time text filter by creator channel name.
+  - Displayed Channel Name as the primary column in leaderboards and portfolio allocations.
+
 ## [Phase R1: Security and Hygiene Remediation] - 2026-10-23
 
 ### Fixed

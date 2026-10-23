@@ -92,3 +92,21 @@ All key architectural decisions for the **Domain-Aware YouTube Influencer Detect
 - **Decision:** Implement standardized benchmarking script (`scripts/scalability_benchmark.py`) measuring core parallelism (`local[1]`, `local[2]`, `local[4]`) on heavy 50,000-row window aggregations, and comparative read/write I/O throughput across Raw CSV, Flat Snappy Parquet, and Partitioned Parquet.
 - **Consequences:** Demonstrates 12.99x multi-core acceleration on JVM pipelined hash aggregations and 9.80x read throughput boost from columnar Parquet over uncompressed CSV. Results cataloged in `metrics/scalability.csv` and `docs/REPORT_NUMBERS.md`.
 
+---
+
+## ADR-011: Channel-Hash Ingestion of 10% Representative YouNiverse Cohort & Human-Readable Channel Names
+- **Date:** 2026-10-23
+- **Status:** Accepted (Phase R2)
+- **Context:** The legacy prototype used an arbitrary head-of-file slice (~127 channels) devoid of human-readable channel names (`name_cc`) and subscriber counts (`subscribers_cc`). Channels were presented exclusively as cryptic 24-character IDs (`UC...`).
+- **Decision:** Ingested the full 10% CRC32-sampled YouNiverse cohort (13,710 channels, 7.14M videos) using streaming Gzip decompression. Merged `name_cc` and `subscribers_cc` into `silver/youniverse_channels`, propagating human-readable creator names (e.g., "Kylie Cosmetics", "James Charles", "Andrea Russett") into gold scored creator artifacts (`scored_creators.parquet`, `scored_creators.csv`) and the Streamlit UI.
+- **Consequences:** Eliminates channel ID opacity across all UI tables, cards, and portfolio outputs. 2,615 beauty influencers scored and ranked with verified names and subscriber tiers.
+
+---
+
+## ADR-012: Live YouTube Data API v3 Discovery Path with Pacific Quota Ledger
+- **Date:** 2026-10-23
+- **Status:** Accepted (Phase R6)
+- **Context:** Real-time brand exploration requires discovering fresh, active creators matching product briefs directly from YouTube, while strictly complying with daily quota caps (8,000 units/day) and avoiding secret leakage.
+- **Decision:** Implemented `src/discovery/query_builder.py` and `src/discovery/candidate_discovery.py`, calling `YouTubeClient` with `search.list` (bounded by 1 call per brief, 100 units) and batched `channels.list` (1 unit per 50 channels). Returns live channel names (`snippet.title`), live subscriber counts, descriptions, thumbnails, and computes topical focus. Integrated into Streamlit as a dedicated live discovery tab with dry-run quota estimation.
+- **Consequences:** Fully operational, quota-guarded live search capability yielding real-time YouTube creators with live names and subscriber metrics.
+

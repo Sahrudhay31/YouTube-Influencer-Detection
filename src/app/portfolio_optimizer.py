@@ -92,7 +92,9 @@ def optimize_portfolio(
             continue
 
         selected.append({
+            "channel_name": row.get("channel_name", row.get("channel_id", "")),
             "channel_id": row.get("channel_id", ""),
+            "subscribers": int(row.get("subscribers", 0)) if pd.notnull(row.get("subscribers")) else 0,
             "size_tier": tier,
             "promotion_potential_score": round(float(row["promotion_potential_score"]), 1),
             "median_views": int(row.get("median_views", 0)),
