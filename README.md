@@ -1,6 +1,8 @@
 # Domain-Aware YouTube Influencer Detection & Promotion-Potential Ranking
 
-A big-data engineering system built on Apache Hadoop HDFS and Apache Spark (SQL + MLlib) designed to analyze YouTube creators, evaluate domain authority, detect sponsorship activities, and rank creators by **Promotion-Potential Score** for product marketing campaigns.
+A big-data engineering system built on Apache Spark (SQL + MLlib) and columnar Snappy Parquet designed to analyze YouTube creators, evaluate domain authority, detect sponsorship activities, and rank creators by **Promotion-Potential Score** for product marketing campaigns.
+
+> **Storage Runtime Mode:** Runs in **local filesystem mode** (`file:///`) by default for local development without Docker dependencies; a multi-container Apache Hadoop HDFS Docker Compose environment (`docker-compose.yml`) is provided for distributed cluster deployments.
 
 ---
 

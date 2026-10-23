@@ -37,6 +37,7 @@ def render_model_results_page(registry_df: pd.DataFrame | None = None) -> None:
 
     # ── Section 1: All Logged Models Table ────────────────────────────────────
     st.subheader("1. Active Models in Model Registry")
+    st.info("ℹ️ **Evaluation Status:** Domain and sponsorship metrics reflect agreement with weak-label heuristics. Human verification pending annotation in `labels/domain_to_label.csv` and `labels/sponsor_to_label.csv`.")
     st.caption("Every entry corresponds to an actual logged Spark ML training run. Hardcoding metrics is strictly prohibited.")
 
     # Select columns to display
