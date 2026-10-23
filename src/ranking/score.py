@@ -348,6 +348,19 @@ def rank_creators_for_brief(
     except Exception:
         df_merged = df_gold.withColumn("median_views_nonsponsored", F.col("median_views")).withColumn("promo_lift", F.lit(None).cast("double"))
 
+    # Join channel_name and subscribers if silver/youniverse_channels exists
+    ch_path = local("silver", "youniverse_channels")
+    if ch_path.exists():
+        try:
+            df_ch = spark.read.parquet(str(ch_path)).select(
+                F.col("channel_id"),
+                F.col("channel_name"),
+                F.col("subscribers")
+            )
+            df_merged = df_merged.join(df_ch, on="channel_id", how="left")
+        except Exception as exc:
+            logger.warning("Could not join silver channels metadata: %s", exc)
+
     # Compute fit scores if brief provided
     fit_df = None
     if product_brief.strip():

@@ -119,8 +119,10 @@ def render_find_influencers_page() -> None:
 
     # Prepare display columns
     display_cols = [
+        "channel_name",
         "channel_url",
         "channel_id",
+        "subscribers",
         "size_tier",
         "promotion_potential_score",
         "median_views",
@@ -133,8 +135,10 @@ def render_find_influencers_page() -> None:
     existing_disp = [c for c in display_cols if c in filtered.columns]
 
     rename_map = {
+        "channel_name": "Channel Name",
         "channel_url": "YouTube Link",
         "channel_id": "Channel ID",
+        "subscribers": "Subscribers",
         "size_tier": "Size Tier",
         "promotion_potential_score": "Promotion Score",
         "median_views": "Median Views",

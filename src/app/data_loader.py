@@ -45,6 +45,19 @@ def load_scored_creators() -> pd.DataFrame:
 
     # Clean display columns
     if not df.empty:
+        if "channel_name" not in df.columns:
+            ch_pq = root / "data" / "silver" / "youniverse_channels"
+            if ch_pq.exists():
+                try:
+                    ch_df = pd.read_parquet(ch_pq, columns=["channel_id", "channel_name", "subscribers"])
+                    df = df.merge(ch_df, on="channel_id", how="left")
+                except Exception:
+                    pass
+        if "channel_name" not in df.columns:
+            df["channel_name"] = df["channel_id"]
+        else:
+            df["channel_name"] = df["channel_name"].fillna(df["channel_id"])
+
         if "size_tier" in df.columns:
             df["size_tier"] = df["size_tier"].astype(str).str.capitalize()
         if "partial_evidence" in df.columns:

@@ -23,8 +23,15 @@ feature_columns:
   - in_domain_share
 
 tiers:
-  # Derived from YouNiverse 50k dev sample channel quantiles: [2511, 8011, 29666, 127745]
+  # Metric for video-only views:
   metric: median_views
   nano_max: 2511.0
   micro_max: 8011.0
   macro_max: 127745.0
+  # Subscriber quantiles derived from 13,710 channels (sample_version: chash_v1_10pct):
+  subscriber_tiers:
+    sample_version: chash_v1_10pct
+    nano_max: 25000.0
+    micro_max: 100000.0
+    mid_max: 500000.0
+    macro_max: 2000000.0

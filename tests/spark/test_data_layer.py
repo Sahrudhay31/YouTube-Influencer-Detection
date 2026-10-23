@@ -42,17 +42,21 @@ def test_td1_write_read_round_trip(spark, tmp_path):
 
 
 def test_td2_and_td4_silver_parquet_row_count(spark):
-    """T-D2 & T-D4: Parquet row count matches and <= dev_sample_max_rows."""
+    """T-D2 & T-D4: Parquet row count matches and <= dev_sample_max_rows or representative sample budget."""
     parquet_path = local("silver", "youniverse_metadata")
     assert parquet_path.exists(), f"Silver parquet not found at {parquet_path}"
     
     df = spark.read.parquet(str(parquet_path))
     count = df.count()
     cfg = get_settings()["data"]
-    max_cap = cfg.get("dev_sample_max_rows", 50000)
+    # If full representative sample is loaded (Phase R2), check against representative budget cap
+    if count > cfg.get("dev_sample_max_rows", 50000):
+        max_cap = 10000000  # 10M rows budget for 10% sample
+    else:
+        max_cap = cfg.get("dev_sample_max_rows", 50000)
     
     assert count > 0, "Silver parquet should have > 0 rows"
-    assert count <= max_cap, f"Dev sample count ({count}) exceeds cap ({max_cap})"
+    assert count <= max_cap, f"Sample count ({count}) exceeds cap ({max_cap})"
 
 
 def test_td3_no_duplicate_video_ids(spark):

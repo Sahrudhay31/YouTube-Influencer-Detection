@@ -62,8 +62,23 @@ def load_youniverse(
         t0 = time.time()
         logger.info("Loading metadata: %s", meta_raw)
 
-        # Read gzip JSONL
-        df = spark.read.json(str(meta_raw))
+        # Read gzip JSONL with explicit schema to avoid costly inference scan
+        from pyspark.sql.types import StructType, StructField, StringType, DoubleType, LongType
+        meta_schema = StructType([
+            StructField("categories", StringType(), True),
+            StructField("channel_id", StringType(), True),
+            StructField("crawl_date", StringType(), True),
+            StructField("description", StringType(), True),
+            StructField("dislike_count", DoubleType(), True),
+            StructField("display_id", StringType(), True),
+            StructField("duration", LongType(), True),
+            StructField("like_count", DoubleType(), True),
+            StructField("tags", StringType(), True),
+            StructField("title", StringType(), True),
+            StructField("upload_date", StringType(), True),
+            StructField("view_count", DoubleType(), True),
+        ])
+        df = spark.read.schema(meta_schema).json(str(meta_raw))
         logger.info("Metadata raw schema: %s", df.schema.simpleString())
 
         raw_count = df.count()

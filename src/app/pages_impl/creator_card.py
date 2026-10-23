@@ -35,10 +35,13 @@ def render_creator_card_page() -> None:
         row = creators_df[creators_df["channel_id"] == ch_id].iloc[0]
         score = row.get("promotion_potential_score", 0.0)
         tier = row.get("size_tier", "Unknown")
+        name = row.get("channel_name", ch_id)
+        if name and name != ch_id:
+            return f"{name} ({ch_id}) | Tier: {tier} | Score: {score:.1f}"
         return f"{ch_id} | Tier: {tier} | Score: {score:.1f}"
 
     selected_id = st.selectbox(
-        "Choose a channel ID:",
+        "Choose a channel to inspect:",
         channel_list,
         format_func=format_creator_label,
         index=0,
@@ -53,12 +56,22 @@ def render_creator_card_page() -> None:
     with c_top1:
         tier = row.get("size_tier", "Nano")
         badge_class = f"badge-{tier.lower()}"
+        ch_name = row.get("channel_name", selected_id)
+        name_markup = (
+            f"<div style='display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;'>"
+            f"<h2 style='margin: 0; color: #FFFFFF; font-size: 1.8rem;'>{ch_name}</h2>"
+            f"<span style='color: #94A3B8; font-size: 0.95rem;'>({selected_id})</span>"
+            f"<span class='{badge_class}'>{tier}</span>"
+            f"</div>"
+            if (ch_name and ch_name != selected_id)
+            else f"<div style='display: flex; align-items: baseline; gap: 10px;'>"
+                 f"<h2 style='margin: 0; color: #FFFFFF; font-size: 1.8rem;'>{selected_id}</h2>"
+                 f"<span class='{badge_class}'>{tier}</span>"
+                 f"</div>"
+        )
         st.markdown(
             f"""
-            <div style="display: flex; align-items: baseline; gap: 10px;">
-                <h2 style="margin: 0; color: #FFFFFF; font-size: 1.8rem;">{selected_id}</h2>
-                <span class="{badge_class}">{tier}</span>
-            </div>
+            {name_markup}
             <p style="color: #94A3B8; margin: 4px 0 0 0;">
                 Domain: <strong>Beauty & Personal Care</strong> | Focus: <strong>{row.get('domain_purity', 0.8)*100:.1f}% in-domain</strong>
                 &nbsp;|&nbsp; <a href="https://www.youtube.com/channel/{selected_id}" target="_blank" style="color: #38BDF8; text-decoration: none; font-weight: 600;">🔗 View Channel on YouTube ↗</a>
