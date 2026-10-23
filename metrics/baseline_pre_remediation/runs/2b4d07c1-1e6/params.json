@@ -1,0 +1,11 @@
+{
+  "hyperparameters_json": "{\"seed\": 42, \"features\": [\"video_count\", \"mean_duration\", \"engagement_rate\", \"view_consistency_cv\", \"channel_age_days\", \"upload_cadence_days\", \"domain_purity\", \"in_domain_share\"]}",
+  "dataset_version": "dev_sample_50k_channels",
+  "split_seed": 42,
+  "n_train": 83,
+  "n_val": 27,
+  "n_test": 17,
+  "class_distribution_train_json": "{\"influencer\": 25, \"normal\": 102}",
+  "train_time_s": 8.01,
+  "spark_master": "local[*]"
+}

@@ -1,0 +1,51 @@
+# settings.yaml — global project settings
+# All paths are relative to the project root unless marked as HDFS URIs.
+
+# ── HDFS ──────────────────────────────────────────────────────────────────────
+hdfs:
+  uri: "hdfs://namenode:8020"           # override with HDFS_URI env var
+  raw_youniverse:  "/bda/raw/youniverse/"
+  raw_api:         "/bda/raw/api/"      # partitioned dt=YYYY-MM-DD
+  silver:          "/bda/silver/"
+  gold:            "/bda/gold/"
+  models:          "/bda/models/"
+
+# ── SPARK ─────────────────────────────────────────────────────────────────────
+spark:
+  master: "local[*]"                    # override for cluster; never hardcode
+  app_name: "yt-influencer-pipeline"
+  log_level: "WARN"
+  shuffle_partitions: 8                 # low for dev; raise for full data
+
+# ── DATA ──────────────────────────────────────────────────────────────────────
+data:
+  # Fraction of YouNiverse to use in dev mode (0 < x <= 1.0)
+  dev_sample_fraction: 0.01
+  # Hard row cap per table in dev mode (applied after fraction sampling)
+  dev_sample_max_rows: 50000
+  # Fixed seed for all splits and sampling — MUST NOT change between runs
+  seed: 42
+  # Train / val / test split ratios (by channel, not by video)
+  split_ratios: [0.70, 0.15, 0.15]
+
+# ── RETENTION ─────────────────────────────────────────────────────────────────
+retention:
+  raw_api_days: 30          # delete raw API partitions older than this
+  refresh_warning_days: 25  # warn when partition is approaching expiry
+
+# ── PATHS (local) ─────────────────────────────────────────────────────────────
+paths:
+  raw:     "data/raw/"
+  silver:  "data/silver/"
+  gold:    "data/gold/"
+  labels:  "labels/"
+  metrics: "metrics/"
+  logs:    "logs/"
+  state:   "state/"
+  docs:    "docs/"
+  models:  "data/models/"
+
+# ── LOGGING ───────────────────────────────────────────────────────────────────
+logging:
+  level: "INFO"
+  api_calls_log: "logs/api_calls.jsonl"

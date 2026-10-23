@@ -1,0 +1,4 @@
+method,cutoff_date,n_channels,precision@5,precision@10,ndcg@5,ndcg@10,spearman_rho,spearman_pvalue
+PromotionPotentialScore,2019-01-01,112,0.6,0.3,0.6005,0.62,0.0246,0.7968
+Baseline_MedianViews,2019-01-01,112,0.0,0.3,0.5013,0.4447,0.1085,0.255
+Baseline_Activity,2019-01-01,112,0.4,0.3,0.5739,0.58,0.2617,0.0053

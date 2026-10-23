@@ -1,0 +1,19 @@
+{
+  "run_id": "2b4d07c1-1e6",
+  "model_name": "influencer_classifier_gbt",
+  "task": "influencer_classification",
+  "algorithm": "gbt",
+  "train_accuracy": 1.0,
+  "val_accuracy": 0.8518518518518519,
+  "test_accuracy": 0.8235294117647058,
+  "train_macro_f1": 1.0,
+  "val_macro_f1": 0.8365539452495974,
+  "test_macro_f1": 0.8381338742393509,
+  "val_pr_auc": 0.6913636363636363,
+  "val_roc_auc": 0.9090909090909091,
+  "train_rmse": null,
+  "val_rmse": null,
+  "test_rmse": null,
+  "overfit_gap_acc": 0.14814814814814814,
+  "majority_baseline_accuracy": 0.8031496062992126
+}

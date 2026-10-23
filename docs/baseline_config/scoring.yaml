@@ -1,0 +1,80 @@
+# scoring.yaml — Promotion-Potential Score component weights
+# All weights must sum to 100. Each component is normalised to [0, 1]
+# within domain × tier before weighting.
+#
+# IMPORTANT: These are starting hypothesis weights.
+# They must be calibrated against the promo-lift regressor (Phase 7).
+# Do NOT treat them as validated until the backtest in Phase 7 is complete.
+
+components:
+  fit:
+    weight: 25
+    description: >
+      TF-IDF cosine similarity between the product brief and the channel's
+      text profile (titles + descriptions + tags). Computed offline per query.
+    source: hypothesis
+
+  conversion_evidence:
+    weight: 25
+    description: >
+      Composite of: smoothed purchase-intent rate from sampled comments,
+      promo lift ratio (sponsored vs non-sponsored baseline views),
+      promo-code / affiliate-link presence rate, repeat-sponsor count
+      (same brand, multiple videos).
+    source: hypothesis
+
+  real_reach:
+    weight: 15
+    description: >
+      Median views on the channel's most recent NON-SPONSORED videos
+      (so reach is not inflated by viral sponsored content).
+      Also includes views ÷ subscribers ratio as a reach-efficiency signal.
+    source: hypothesis
+
+  engagement_quality:
+    weight: 15
+    description: >
+      Tier-adjusted engagement rate (likes + comments ÷ views),
+      minus the authenticity penalty from comment analysis
+      (duplicate-comment share, commenter concentration, spike anomalies).
+    source: hypothesis
+
+  momentum:
+    weight: 10
+    description: >
+      Recent weekly subscriber and view growth rate; acceleration (2nd derivative).
+      Uses the YouNiverse time-series data.
+    source: hypothesis
+
+  consistency:
+    weight: 10
+    description: >
+      Coefficient of variation of views across recent videos.
+      Lower variance = more predictable sponsorship results.
+    source: hypothesis
+
+penalties:
+  sponsor_saturation:
+    description: >
+      Deducted when sponsored_rate > 0.5 (more than half of videos are sponsored).
+      Linearly scales from 0 at 50% to full penalty at 100%.
+    max_penalty: 10
+
+  competitor_brand_exposure:
+    description: >
+      Deducted when a known competitor brand appears in the channel's sponsor history.
+      User must provide the competitor list; no default brands are hardcoded.
+    max_penalty: 15
+
+normalisation:
+  method: "percentile_rank"
+  scope: "within_domain_and_tier"
+  # Score is a percentile rank (0–100) within the creator's domain and size tier.
+  # This makes rankings fair across very different audience sizes.
+
+missing_component_policy:
+  # When a component cannot be computed (e.g., no comment data collected),
+  # renormalise the remaining weights to still sum to 100.
+  # Flag the creator with partial_evidence=true; never impute silently.
+  flag_field: "partial_evidence"
+  impute: false

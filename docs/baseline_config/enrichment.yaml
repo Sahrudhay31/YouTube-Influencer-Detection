@@ -1,0 +1,102 @@
+# enrichment.yaml — Phase 6: Live Enrichment Funnel, Comments & Audience Quality Config
+
+# ── FUNNEL STAGE THRESHOLDS ────────────────────────────────────────────────────
+funnel:
+  # Stage 1: Domain filter — channel must belong to a labelled domain
+  require_labelled_domain: true
+
+  # Stage 2: Influencer score gate — model probability threshold
+  influencer_score_min: 0.55
+
+  # Stage 3: Reach gate — minimum estimated median views to shortlist
+  reach_min_views: 5000
+
+  # Stage 4: API enrichment candidate cap — max channels sent to YouTube API per run
+  max_api_candidates: 50
+
+  # Columns propagated from gold/channel_influencer_profiles to the funnel
+  gold_columns:
+    - channel_id
+    - size_tier
+    - probability
+    - engagement_rate
+    - domain_purity
+    - channel_age_days
+    - upload_cadence_days
+
+# ── COMMENT SAMPLING ──────────────────────────────────────────────────────────
+comments:
+  # Number of top-performing videos to sample comments from per channel
+  videos_per_channel: 5
+
+  # Max comment pages to fetch per video (each page costs 1 quota unit)
+  max_pages_per_video: 2
+
+  # Max comments to retain per channel (stratified reservoir)
+  max_comments_per_channel: 200
+
+  # Reservoir sampling seed
+  seed: 42
+
+  # Stratified export: fraction sent to human labelling (purchase-intent)
+  label_export_fraction: 0.05
+  label_export_min_rows: 50
+  label_export_max_rows: 500
+
+# ── PURCHASE-INTENT CLASSIFICATION (rule-based baseline) ──────────────────────
+purchase_intent:
+  # Regex keyword groups used by the rule baseline (case-insensitive)
+  intent_keywords:
+    - "\\bbuy\\b"
+    - "\\bpurchase\\b"
+    - "\\border\\b"
+    - "\\bwhere (can i|do i) (get|buy|find)\\b"
+    - "\\bhow much\\b"
+    - "\\bprice\\b"
+    - "\\blink\\b"
+    - "\\bdiscount\\b"
+    - "\\bcoupon\\b"
+    - "\\bpromo\\b"
+    - "\\baffiliate\\b"
+    - "\\bcode\\b"
+    - "\\bshop\\b"
+    - "\\bwebsite\\b"
+    - "\\bavailable\\b"
+    - "\\bin stock\\b"
+    - "\\brestock\\b"
+
+  # Minimum keyword matches to classify as intent=1 (rule baseline)
+  min_keyword_hits: 1
+
+# ── LOYALTY PROXY ──────────────────────────────────────────────────────────────
+loyalty:
+  # Hash function for author IDs — do NOT change after first run (breaks continuity)
+  hash_algorithm: sha256
+  # Salt is read from env var COMMENT_HASH_SALT at runtime
+
+  # Loyalty tier thresholds: a commenter is "loyal" if they appear in >= N videos
+  loyal_videos_min: 2
+
+  # Output: loyal commenter share per channel
+  loyalty_metric: loyal_commenter_share
+
+# ── AUTHENTICITY CHECKS ────────────────────────────────────────────────────────
+authenticity:
+  # Flag channel if duplicate comment share exceeds this ratio
+  duplicate_comment_max_share: 0.15
+
+  # Flag channel if top-1 commenter drives more than this share of all comments
+  top1_commenter_max_share: 0.10
+
+  # Flag channel if top-5 commenters collectively drive more than this share
+  top5_commenters_max_share: 0.30
+
+  # Comment-count spike: flag if a single video has > X times the channel mean
+  spike_multiplier: 5.0
+
+# ── OUTPUT PATHS ──────────────────────────────────────────────────────────────
+output:
+  funnel_candidates: "data/gold/enrichment_candidates"
+  comment_samples:   "data/silver/comment_samples"
+  audience_quality:  "data/gold/audience_quality"
+  label_export:      "labels/purchase_intent_labelled.csv"

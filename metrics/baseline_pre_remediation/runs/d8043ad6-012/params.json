@@ -1,0 +1,11 @@
+{
+  "hyperparameters_json": "{\"minDF\": 2.0, \"algorithm\": \"naive_bayes\"}",
+  "dataset_version": "dev_sample_50k",
+  "split_seed": 42,
+  "n_train": 28156,
+  "n_val": 14596,
+  "n_test": 7248,
+  "class_distribution_train_json": "{\"beauty_personal_care\": 1632, \"out_of_domain\": 26524}",
+  "train_time_s": 6.83,
+  "spark_master": "local[*]"
+}

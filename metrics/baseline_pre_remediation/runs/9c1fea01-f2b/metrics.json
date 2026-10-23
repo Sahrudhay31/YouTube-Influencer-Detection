@@ -1,0 +1,19 @@
+{
+  "run_id": "9c1fea01-f2b",
+  "model_name": "influencer_classifier_logistic_regression",
+  "task": "influencer_classification",
+  "algorithm": "logistic_regression",
+  "train_accuracy": 0.7469879518072289,
+  "val_accuracy": 0.7777777777777778,
+  "test_accuracy": 0.7058823529411765,
+  "train_macro_f1": 0.7685334760313587,
+  "val_macro_f1": 0.791005291005291,
+  "test_macro_f1": 0.7525676937441643,
+  "val_pr_auc": 0.5004112554112554,
+  "val_roc_auc": 0.8272727272727273,
+  "train_rmse": null,
+  "val_rmse": null,
+  "test_rmse": null,
+  "overfit_gap_acc": null,
+  "majority_baseline_accuracy": 0.8031496062992126
+}

@@ -1,0 +1,19 @@
+{
+  "run_id": "13e52ac5-e7e",
+  "model_name": "domain_classifier_logistic_regression",
+  "task": "domain_classification",
+  "algorithm": "logistic_regression",
+  "train_accuracy": 0.9989700241511579,
+  "val_accuracy": 0.9131268840778295,
+  "test_accuracy": 0.967439293598234,
+  "train_macro_f1": 0.9989671931987637,
+  "val_macro_f1": 0.8955041917797477,
+  "test_macro_f1": 0.9647762341370439,
+  "val_pr_auc": null,
+  "val_roc_auc": null,
+  "train_rmse": null,
+  "val_rmse": null,
+  "test_rmse": null,
+  "overfit_gap_acc": null,
+  "majority_baseline_accuracy": 0.8974376541518224
+}

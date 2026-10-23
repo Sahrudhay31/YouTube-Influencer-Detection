@@ -1,0 +1,19 @@
+{
+  "run_id": "c1993382-288",
+  "model_name": "domain_classifier_linear_svc",
+  "task": "domain_classification",
+  "algorithm": "linear_svc",
+  "train_accuracy": 0.9980110811194772,
+  "val_accuracy": 0.9213483146067416,
+  "test_accuracy": 0.9297737306843267,
+  "train_macro_f1": 0.9980053248370331,
+  "val_macro_f1": 0.9197831682590861,
+  "test_macro_f1": 0.9459295616779292,
+  "val_pr_auc": null,
+  "val_roc_auc": null,
+  "train_rmse": null,
+  "val_rmse": null,
+  "test_rmse": null,
+  "overfit_gap_acc": null,
+  "majority_baseline_accuracy": 0.8974376541518224
+}

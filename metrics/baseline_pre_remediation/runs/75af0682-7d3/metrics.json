@@ -1,0 +1,19 @@
+{
+  "run_id": "75af0682-7d3",
+  "model_name": "influencer_classifier_random_forest",
+  "task": "influencer_classification",
+  "algorithm": "random_forest",
+  "train_accuracy": 0.9759036144578314,
+  "val_accuracy": 0.7407407407407407,
+  "test_accuracy": 0.7647058823529411,
+  "train_macro_f1": 0.9763494768547876,
+  "val_macro_f1": 0.7292181069958849,
+  "test_macro_f1": 0.7955182072829131,
+  "val_pr_auc": 0.2825095194660412,
+  "val_roc_auc": 0.6727272727272727,
+  "train_rmse": null,
+  "val_rmse": null,
+  "test_rmse": null,
+  "overfit_gap_acc": 0.23516287371709066,
+  "majority_baseline_accuracy": 0.8031496062992126
+}

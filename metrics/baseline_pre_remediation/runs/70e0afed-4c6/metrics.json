@@ -1,0 +1,19 @@
+{
+  "run_id": "70e0afed-4c6",
+  "model_name": "domain_classifier_naive_bayes",
+  "task": "domain_classification",
+  "algorithm": "naive_bayes",
+  "train_accuracy": 0.9722261684898423,
+  "val_accuracy": 0.9582762400657714,
+  "test_accuracy": 0.97530353200883,
+  "train_macro_f1": 0.9746064443005479,
+  "val_macro_f1": 0.9591789394523786,
+  "test_macro_f1": 0.9768383800484434,
+  "val_pr_auc": null,
+  "val_roc_auc": null,
+  "train_rmse": null,
+  "val_rmse": null,
+  "test_rmse": null,
+  "overfit_gap_acc": null,
+  "majority_baseline_accuracy": 0.8974376541518224
+}

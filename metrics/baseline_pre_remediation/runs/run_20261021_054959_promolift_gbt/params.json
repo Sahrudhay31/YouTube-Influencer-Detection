@@ -1,0 +1,11 @@
+{
+  "hyperparameters_json": "{\"maxIter\": 25, \"maxDepth\": 3, \"features\": [\"median_views\", \"engagement_rate\", \"view_consistency_cv\", \"channel_age_days\", \"upload_cadence_days\", \"domain_purity\", \"sponsored_rate\"], \"seed\": 42, \"total_channels\": 41}",
+  "dataset_version": "unknown",
+  "split_seed": null,
+  "n_train": 26,
+  "n_val": 12,
+  "n_test": 3,
+  "class_distribution_train_json": "{}",
+  "train_time_s": 15.318845748901367,
+  "spark_master": null
+}

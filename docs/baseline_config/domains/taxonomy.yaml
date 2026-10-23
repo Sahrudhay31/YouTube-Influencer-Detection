@@ -1,0 +1,87 @@
+# taxonomy.yaml — YouTube domain taxonomy
+# macro_domain → list of micro_domains
+# All entries are source: agent_proposed until the user reviews and approves them.
+# After user review, change source to: human_approved
+#
+# ⚠️ STATUS: agent_proposed — awaiting user review and approval
+
+macro_domains:
+
+  beauty_personal_care:
+    source: agent_proposed
+    youtube_category_ids: [26]   # "Howto & Style"
+    youniverse_categories: ["Howto & Style"]
+    micro_domains:
+      - skincare
+      - makeup
+      - haircare
+      - nail_art
+      - fragrance
+      - personal_hygiene
+    config_file: "config/domains/beauty_personal_care.yaml"
+    # FIRST DEEP DOMAIN: all downstream models trained here first.
+
+  fitness_health:
+    source: agent_proposed
+    youtube_category_ids: [17, 26]  # "Sports" + "Howto & Style"
+    micro_domains:
+      - gym_weightlifting
+      - yoga_mindfulness
+      - nutrition_supplements
+      - running_cardio
+      - sports_performance
+    config_file: "config/domains/fitness_health.yaml"
+    # FUTURE DOMAIN: add config file to enable.
+
+  technology:
+    source: agent_proposed
+    youtube_category_ids: [28]   # "Science & Technology"
+    micro_domains:
+      - smartphones_tablets
+      - laptops_computers
+      - gaming_hardware
+      - software_apps
+      - audio_video_gear
+    config_file: "config/domains/technology.yaml"
+    # FUTURE DOMAIN.
+
+  finance_investing:
+    source: agent_proposed
+    youtube_category_ids: [22]   # "People & Blogs" (most finfluencers)
+    micro_domains:
+      - personal_finance
+      - stock_investing
+      - crypto
+      - real_estate
+      - entrepreneurship
+    config_file: "config/domains/finance_investing.yaml"
+    # FUTURE DOMAIN.
+
+  gaming_entertainment:
+    source: agent_proposed
+    youtube_category_ids: [20, 24]  # "Gaming" + "Entertainment"
+    micro_domains:
+      - game_reviews_walkthroughs
+      - esports
+      - gaming_gear_setups
+      - streaming_culture
+    config_file: "config/domains/gaming_entertainment.yaml"
+    # FUTURE DOMAIN.
+
+  food_cooking:
+    source: agent_proposed
+    youtube_category_ids: [26]
+    micro_domains:
+      - recipes_cooking_tutorials
+      - restaurant_reviews
+      - food_travel_vlogs
+      - baking_pastry
+    config_file: "config/domains/food_cooking.yaml"
+    # FUTURE DOMAIN.
+
+# ── CATEGORY ID MAPPING NOTE ─────────────────────────────────────────────────
+# youtube_category_ids above are hypotheses based on YouTube's published
+# category list. The ACTUAL category_id values in YouNiverse must be verified
+# by running: print schema + 5 rows + value_counts on the category_id column
+# of the YouNiverse metadata file BEFORE using these in any model.
+# Record verified values in docs/data_dictionary.md.

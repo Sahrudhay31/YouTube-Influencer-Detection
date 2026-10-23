@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261021_054959_promolift_gbt",
+  "model_name": "promo_lift_regressor_gbt",
+  "task": "regression",
+  "algorithm": "GBTRegressor",
+  "train_accuracy": null,
+  "val_accuracy": null,
+  "test_accuracy": null,
+  "train_macro_f1": null,
+  "val_macro_f1": null,
+  "test_macro_f1": null,
+  "val_pr_auc": null,
+  "val_roc_auc": null,
+  "train_rmse": 0.05797915936724742,
+  "val_rmse": 4.822750286078052,
+  "test_rmse": 7.415824686034287,
+  "overfit_gap_acc": null,
+  "majority_baseline_accuracy": null
+}

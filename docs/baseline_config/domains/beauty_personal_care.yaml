@@ -1,0 +1,117 @@
+# beauty_personal_care.yaml — domain config for Beauty & Personal Care
+# This is the FIRST DEEP DOMAIN. All ML models are trained here first.
+#
+# Every term has a `source` field:
+#   human         = reviewed and approved by the project owner
+#   agent_proposed = proposed by the AI; awaiting human review
+#
+# ⚠️ STATUS: agent_proposed — awaiting user review
+
+domain: beauty_personal_care
+language: en
+micro_domains: [skincare, makeup, haircare, nail_art, fragrance, personal_hygiene]
+
+# ── DOMAIN KEYWORDS (used as weak-label features in Phase 3) ──────────────────
+# DO NOT add creator names, brand sentiment words, or moral judgements here.
+keywords:
+  core:
+    - {term: "skincare", source: agent_proposed}
+    - {term: "makeup", source: agent_proposed}
+    - {term: "foundation", source: agent_proposed}
+    - {term: "concealer", source: agent_proposed}
+    - {term: "moisturizer", source: agent_proposed}
+    - {term: "serum", source: agent_proposed}
+    - {term: "sunscreen", source: agent_proposed}
+    - {term: "spf", source: agent_proposed}
+    - {term: "retinol", source: agent_proposed}
+    - {term: "hyaluronic acid", source: agent_proposed}
+    - {term: "blush", source: agent_proposed}
+    - {term: "highlighter", source: agent_proposed}
+    - {term: "contour", source: agent_proposed}
+    - {term: "mascara", source: agent_proposed}
+    - {term: "eyeliner", source: agent_proposed}
+    - {term: "eyeshadow", source: agent_proposed}
+    - {term: "lipstick", source: agent_proposed}
+    - {term: "lip gloss", source: agent_proposed}
+    - {term: "primer", source: agent_proposed}
+    - {term: "setting spray", source: agent_proposed}
+    - {term: "haircare", source: agent_proposed}
+    - {term: "shampoo", source: agent_proposed}
+    - {term: "conditioner", source: agent_proposed}
+    - {term: "hair mask", source: agent_proposed}
+    - {term: "hair oil", source: agent_proposed}
+    - {term: "nail polish", source: agent_proposed}
+    - {term: "manicure", source: agent_proposed}
+    - {term: "gel nails", source: agent_proposed}
+    - {term: "perfume", source: agent_proposed}
+    - {term: "fragrance", source: agent_proposed}
+    - {term: "deodorant", source: agent_proposed}
+    - {term: "body lotion", source: agent_proposed}
+    - {term: "cleanser", source: agent_proposed}
+    - {term: "toner", source: agent_proposed}
+    - {term: "exfoliant", source: agent_proposed}
+    - {term: "acne", source: agent_proposed}
+    - {term: "skin type", source: agent_proposed}
+    - {term: "grwm", source: agent_proposed}  # "get ready with me"
+    - {term: "glam", source: agent_proposed}
+    - {term: "beauty routine", source: agent_proposed}
+    - {term: "skincare routine", source: agent_proposed}
+    - {term: "makeup tutorial", source: agent_proposed}
+    - {term: "drugstore makeup", source: agent_proposed}
+    - {term: "dupes", source: agent_proposed}  # beauty dupes
+    - {term: "holy grail", source: agent_proposed}  # "holy grail product"
+
+# ── SPONSORSHIP DETECTION PATTERNS ────────────────────────────────────────────
+# Used in Phase 4 rule-based sponsor detection.
+# Patterns are applied to video title + description (lowercased).
+sponsor_disclosure_patterns:
+  - {pattern: "#ad", source: agent_proposed}
+  - {pattern: "#sponsored", source: agent_proposed}
+  - {pattern: "#gifted", source: agent_proposed}
+  - {pattern: "paid partnership", source: agent_proposed}
+  - {pattern: "this video is sponsored by", source: agent_proposed}
+  - {pattern: "sponsored by", source: agent_proposed}
+  - {pattern: "in partnership with", source: agent_proposed}
+  - {pattern: "thank you.*for sending", source: agent_proposed}
+  - {pattern: "use code.*for.*off", source: agent_proposed}  # promo codes
+  - {pattern: "discount code", source: agent_proposed}
+  - {pattern: "affiliate link", source: agent_proposed}
+  - {pattern: "\\*links below\\*", source: agent_proposed}
+  - {pattern: "pr package", source: agent_proposed}
+  - {pattern: "press sample", source: agent_proposed}
+  - {pattern: "collab with", source: agent_proposed}
+
+affiliate_link_patterns:
+  - {pattern: "ltk\\.com", source: agent_proposed}     # LikeToKnowIt / LTK
+  - {pattern: "shopmy\\.us", source: agent_proposed}   # ShopMy
+  - {pattern: "shareasale\\.com", source: agent_proposed}
+  - {pattern: "bit\\.ly", source: agent_proposed}      # generic shortlinks (low precision)
+  - {pattern: "utm_source=", source: agent_proposed}   # UTM params
+  - {pattern: "utm_campaign=", source: agent_proposed}
+
+# ── PURCHASE INTENT PHRASES (Phase 6 rules baseline) ─────────────────────────
+purchase_intent_phrases:
+  strong_positive:
+    - {phrase: "where can i buy", source: agent_proposed}
+    - {phrase: "where to buy", source: agent_proposed}
+    - {phrase: "link?", source: agent_proposed}
+    - {phrase: "where do i get", source: agent_proposed}
+    - {phrase: "just ordered", source: agent_proposed}
+    - {phrase: "already bought", source: agent_proposed}
+    - {phrase: "used your code", source: agent_proposed}
+    - {phrase: "used your link", source: agent_proposed}
+    - {phrase: "bought this", source: agent_proposed}
+    - {phrase: "adding to cart", source: agent_proposed}
+    - {phrase: "going to try this", source: agent_proposed}
+    - {phrase: "need this in my life", source: agent_proposed}
+    - {phrase: "is it available in", source: agent_proposed}
+  weak_positive:
+    - {phrase: "how much does it cost", source: agent_proposed}
+    - {phrase: "how much is it", source: agent_proposed}
+    - {phrase: "worth buying", source: agent_proposed}
+    - {phrase: "should i get", source: agent_proposed}
+    - {phrase: "want to try", source: agent_proposed}
+  negative:
+    - {phrase: "not worth it", source: agent_proposed}
+    - {phrase: "wouldn't buy", source: agent_proposed}
+    - {phrase: "waste of money", source: agent_proposed}

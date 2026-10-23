@@ -1,0 +1,52 @@
+# quota_costs.yaml — YouTube Data API v3 unit costs per method
+# source_url: the official documentation page verified on verified_on date.
+# IMPORTANT: Verify these costs on the official page before each major project milestone;
+# Google occasionally updates quota costs without notice.
+#
+# Official page: https://developers.google.com/youtube/v3/determine_quota_cost
+# Verified on: 2026-10-20 (UNVERIFIED — no live internet access during code generation;
+#              user must confirm these costs against the official page before going live)
+
+methods:
+  search.list:
+    cost_per_call: 100
+    notes: >
+      100 units per call. EACH PAGE counts as a separate call.
+      This method has its own sub-bucket (~100 calls/day default as of mid-2024;
+      exact current limit MUST be verified on the official quota page).
+    source_url: "https://developers.google.com/youtube/v3/determine_quota_cost"
+    verified_on: "UNVERIFIED — confirm before live run"
+
+  channels.list:
+    cost_per_call: 1
+    batch_size: 50
+    notes: "1 unit per call; up to 50 channel IDs per call."
+    source_url: "https://developers.google.com/youtube/v3/determine_quota_cost"
+    verified_on: "UNVERIFIED — confirm before live run"
+
+  videos.list:
+    cost_per_call: 1
+    batch_size: 50
+    notes: "1 unit per call; up to 50 video IDs per call."
+    source_url: "https://developers.google.com/youtube/v3/determine_quota_cost"
+    verified_on: "UNVERIFIED — confirm before live run"
+
+  playlistItems.list:
+    cost_per_call: 1
+    batch_size: 50
+    notes: >
+      1 unit per call; up to 50 items per page.
+      Use the channel's uploads playlist (from channels.list
+      contentDetails.relatedPlaylists.uploads) rather than search.list.
+    source_url: "https://developers.google.com/youtube/v3/determine_quota_cost"
+    verified_on: "UNVERIFIED — confirm before live run"
+
+  commentThreads.list:
+    cost_per_call: 1
+    batch_size: 100
+    notes: >
+      1 unit per call; up to 100 comments per page.
+      commentsDisabled (403) is NOT a quota error: skip video and continue.
+      quotaExceeded (403) IS: stop all calls immediately.
+    source_url: "https://developers.google.com/youtube/v3/determine_quota_cost"
+    verified_on: "UNVERIFIED — confirm before live run"
