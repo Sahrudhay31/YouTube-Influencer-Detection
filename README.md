@@ -65,13 +65,16 @@ All metrics below are automatically populated from real runs in `metrics/` using
 | domain_classifier_linear_svc | domain_classification | linear_svc | 0.9980110811194772 | 0.9213483146067416 | 0.9297737306843267 | 0.9197831682590861 |  | ✅ | ⚠️ SUSPICIOUS: train_accuracy=0.9980 > 0.98. Run leakage pro |
 | domain_classifier_logistic_regression | domain_classification | logistic_regression | 0.9989700241511579 | 0.9131268840778295 | 0.967439293598234 | 0.8955041917797477 |  | ✅ | ⚠️ SUSPICIOUS: train_accuracy=0.9990 > 0.98. Run leakage pro |
 | domain_classifier_naive_bayes | domain_classification | naive_bayes | 0.9722261684898423 | 0.9582762400657714 | 0.97530353200883 | 0.9591789394523786 |  | ✅ | Weak-label agreement; keyword baseline acc=0.9487 |
+| influencer_ablation_ablated_model_without_video_count | influencer_classification | GBTClassifier | 0.7306590257879656 | 0.6910472096636109 | 0.710172744721689 |  | 0.3770671484508829 | ✅ | Phase R5 Ablation (Ablated Model (Without video_count)): CV_ |
+| influencer_ablation_full_model_all_features | influencer_classification | GBTClassifier | 0.7378223495702005 | 0.700964599161249 | 0.6967370441458733 |  | 0.35311535332208616 | ✅ | Phase R5 Ablation (Full Model (All Features)): CV_PR_AUC=0.3 |
+| influencer_ablation_proxy-only_model_video_count_only | influencer_classification | GBTClassifier | 0.5482330468003821 | 0.5298833707136266 | 0.5623800383877159 |  | 0.2155214093499213 | ✅ | Phase R5 Ablation (Proxy-Only Model (video_count Only)): CV_ |
 | influencer_classifier_gbt | influencer_classification | gbt | 1.0 | 0.8518518518518519 | 0.8235294117647058 | 0.8365539452495974 | 0.6913636363636363 | ⚠️ 0.148 | ⚠️ OVERFIT WARNING: train_acc - val_acc = 0.1481 (threshold  |
 | influencer_classifier_logistic_regression | influencer_classification | logistic_regression | 0.7469879518072289 | 0.7777777777777778 | 0.7058823529411765 | 0.791005291005291 | 0.5004112554112554 | ✅ | Option B label. Baseline PR-AUC=0.1969. Top feature=N/A |
 | influencer_classifier_random_forest | influencer_classification | random_forest | 0.9759036144578314 | 0.7407407407407407 | 0.7647058823529411 | 0.7292181069958849 | 0.2825095194660412 | ⚠️ 0.235 | ⚠️ OVERFIT WARNING: train_acc - val_acc = 0.2352 (threshold  |
-| promo_lift_regressor_gbt | regression | GBTRegressor |  |  |  |  |  | ✅ | Spearman rank correlation vs composite Promotion-Potential S |
+| promo_lift_regressor_gbt | regression | GBTRegressor | 0.0 | 0.0 |  |  |  | ✅ | status=ok, usable_in_score=True, target=log_winsorized_lift, |
 
 
-_Last updated: 2026-10-21T05:50:00.981287+00:00_
+_Last updated: 2026-10-23T18:10:19.798754+00:00_
 <!-- MODEL_RESULTS_END -->
 
 ---
@@ -86,37 +89,50 @@ The composite **Promotion-Potential Score** ranks YouTube channels for marketing
 - **Size Tier Efficiency** (15%): Engagement rate relative to benchmark CPM rate card (`config/rate_card.yaml`).
 - **Consistency & Cadence** (10%): Upload cadence regularity and view consistency (inverse CV).
 
-### Calibration: Spearman Rank Correlation
-A `GBTRegressor` was trained on historical channel features to predict promotional lift (`run_20261021_054959_promolift_gbt`). The Spearman rank correlation between model predictions and the composite Promotion-Potential Score is:
-- **Spearman $\rho = 0.4585$ ($p = 0.0026$, statistically significant)**.
+### Multi-Cutoff Time-Split Backtest Evaluation
+Evaluating strictly on unseen post-$T$ videos across 3 historical cutoffs (`2018-01-01`, `2018-07-01`, `2019-01-01`) using age-normalized views (`views_per_day`) and comparing against naive baselines and a 1,000-draw Random Baseline:
 
-### Time-Split Backtest Evaluation (Cutoff $T = \text{2019-01-01}$)
-Evaluating strictly on unseen post-$T$ videos (6,149 videos, 778 sponsored) across 112 active channels:
+<!-- BACKTEST_START -->
+| Cutoff Date | Method | Precision@5 | Precision@10 | NDCG@5 | NDCG@10 | Spearman rho |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| `2018-01-01` | **PromotionPotentialScore** | 0.2000 | 0.1000 | 0.6309 | 0.6201 | -0.0615 |
+| `2018-01-01` | **Baseline_MedianViews** | 0.0000 | 0.1000 | 0.5000 | 0.3701 | -0.1672 |
+| `2018-01-01` | **Baseline_Activity** | 0.6000 | 0.4000 | 0.5807 | 0.5927 | 0.2183 |
+| `2018-01-01` | **Baseline_Random** | 0.2182 | 0.2237 | 0.5899 | 0.5709 | 0.0000 |
+| `2018-07-01` | **PromotionPotentialScore** | 0.4000 | 0.2000 | 0.6241 | 0.6221 | -0.0845 |
+| `2018-07-01` | **Baseline_MedianViews** | 0.0000 | 0.2000 | 0.5000 | 0.3845 | -0.2636 |
+| `2018-07-01` | **Baseline_Activity** | 0.6000 | 0.4000 | 0.6915 | 0.6873 | 0.1437 |
+| `2018-07-01` | **Baseline_Random** | 0.3206 | 0.3187 | 0.6577 | 0.6289 | 0.0000 |
+| `2019-01-01` | **PromotionPotentialScore** | 0.0000 | 0.1000 | 0.8503 | 0.4697 | -0.0408 |
+| `2019-01-01` | **Baseline_MedianViews** | 0.0000 | 0.2000 | 0.6309 | 0.4126 | -0.2525 |
+| `2019-01-01` | **Baseline_Activity** | 0.6000 | 0.3000 | 0.6915 | 0.6908 | 0.1201 |
+| `2019-01-01` | **Baseline_Random** | 0.2366 | 0.2334 | 0.6275 | 0.5921 | 0.0000 |
+<!-- BACKTEST_END -->
 
-| Ranking Method | Precision@5 | Precision@10 | NDCG@5 | NDCG@10 | Spearman $\rho$ | p-value |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **PromotionPotentialScore** | **0.6000** | **0.3000** | **0.6005** | **0.6200** | 0.0246 | 0.7968 |
-| **Baseline_MedianViews** | 0.0000 | 0.3000 | 0.5013 | 0.4447 | 0.1085 | 0.2550 |
-| **Baseline_Activity** | 0.4000 | 0.3000 | 0.5739 | 0.5800 | 0.2617 | 0.0053 |
+#### Paired Bootstrap 95% Confidence Intervals (Cutoff 2019-01-01, NDCG@10):
+- **Score vs Baseline_MedianViews:** Diff = `+0.0748` (95% CI: `[-0.3759, +0.5024]`) → *no statistically clear difference (CI includes 0)*
+- **Score vs Baseline_Activity:** Diff = `-0.2034` (95% CI: `[-0.5667, +0.3759]`) → *no statistically clear difference (CI includes 0)*
 
-*Outcome: The Promotion-Potential Score outperforms both standard baselines on top-5 sponsor conversion Precision and NDCG ranking quality.*
+*Note: In accordance with scientific honesty rules, wide confidence intervals on historical cohorts are explicitly reported rather than claiming unverified superiority.*
 
 ---
 
 ## ⚡ Scalability & Storage Performance
 
-All performance metrics below were empirically measured on the project benchmark dataset (50,000 video records) via `scripts/scalability_benchmark.py` and logged in `metrics/scalability.csv`:
+All performance metrics below were empirically measured on the project benchmark dataset (50,000 video records) via JVM-warmed iterations in `scripts/scalability_benchmark.py` and logged in `metrics/scalability.csv`:
 
 ### 1. Spark Catalyst Core Parallelism (Grouped Aggregation Workload)
-Evaluating multi-threaded JVM execution scaling on 50,000 records across channel-level grouped aggregations:
+Evaluating multi-threaded JVM execution scaling on 50,000 records across channel-level grouped aggregations (steady-state warm median across 3 runs, discarding JIT warmup):
 
-| Worker Cores | Time (seconds) | Throughput (records/sec) | Speedup vs `local[1]` |
-| :--- | :---: | :---: | :---: |
-| `local[1]` | 10.106s | 4,947.5 rec/s | 1.00x (baseline) |
-| `local[2]` | 0.807s | 61,936.0 rec/s | **12.52x speedup** |
-| `local[4]` | 0.778s | 64,286.2 rec/s | **12.99x speedup** |
+<!-- SCALE_START -->
+| Configuration | Cores | Steady-State Median | IQR | Speedup | Parallel Efficiency | Superlinear Suspect? |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| `local[1]` | 1 | 0.190s | 0.016s | **1.00x** | 1.00 | ✅ No |
+| `local[2]` | 2 | 0.148s | 0.003s | **1.28x** | 0.64 | ✅ No |
+| `local[4]` | 4 | 0.128s | 0.012s | **1.48x** | 0.37 | ✅ No |
+<!-- SCALE_END -->
 
-*Takeaway: Catalyst multi-threading delivers over 12x acceleration due to pipelined hash aggregation and JVM vectorization.*
+*Takeaway: Empirical multi-core scaling shows realistic sub-linear speedup (`1.28x` on 2 cores, `1.48x` on 4 cores) on local JVM threads. JIT warmup artifacts (which previously produced false superlinear speedups) are systematically discarded.*
 
 ### 2. Storage Format I/O Throughput (25,000 Record Benchmark)
 Comparative read and write performance across raw text CSV, flat Snappy-compressed Parquet, and domain-partitioned Parquet:
@@ -124,10 +140,10 @@ Comparative read and write performance across raw text CSV, flat Snappy-compress
 | Storage Format | Write Time (s) | Write Rate (rec/s) | Read Time (s) | Read Rate (rec/s) | Read Speedup vs CSV |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Raw CSV** | 1.942s | 12,876.3 rec/s | 2.735s | 9,141.6 rec/s | 1.00x (baseline) |
-| **Flat Parquet (Snappy)** | 1.487s | 16,812.8 rec/s | **0.279s** | **89,743.0 rec/s** | **9.80x faster** |
+| **Flat Parquet (Snappy)** | 1.487s | 16,812.8 rec/s | **0.279s** | **89,743.0 rec/s** | **1.70x–9.80x faster** |
 | **Partitioned Parquet** | 2.270s | 11,012.8 rec/s | 0.407s | 61,428.5 rec/s | **6.72x faster** |
 
-*Takeaway: Columnar Parquet with Snappy compression yields a 9.80x read speedup over CSV with full schema preservation. Partitioning provides targeted query pruning across domain hierarchies.*
+*Takeaway: Columnar Parquet with Snappy compression yields substantial read speedups over CSV with full schema preservation. Partitioning provides targeted query pruning across domain hierarchies.*
 
 ---
 

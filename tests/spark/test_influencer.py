@@ -181,3 +181,98 @@ def test_ti5_feature_nulls_handled_no_silent_drops(spark):
     for col in cfg["feature_columns"]:
         null_count = df_feat.filter(F.col(col).isNull()).count()
         assert null_count == 0, f"Column '{col}' contains unexpected nulls: {null_count}"
+
+
+def test_ti6_cv_folds_share_no_channels(spark):
+    """T-I6: Cross-validation folds share strictly zero channels (channel-grouped split)."""
+    from scripts.influencer_leakage_ablation import assign_grouped_folds
+
+    # Create synthetic dataset with 50 channels
+    ch_ids = [f"ch_{i:03d}" for i in range(50)]
+    df = _safe_df(spark, [(cid,) for cid in ch_ids], ["channel_id"])
+    df_folds = assign_grouped_folds(df, num_folds=5)
+
+    rows = df_folds.select("channel_id", "fold").collect()
+    fold_channels = {}
+    for r in rows:
+        fold_channels.setdefault(r["fold"], set()).add(r["channel_id"])
+
+    # Ensure all 5 folds exist
+    assert len(fold_channels) == 5
+
+    # Check pairwise disjointness
+    folds = list(fold_channels.keys())
+    for i in range(len(folds)):
+        for j in range(i + 1, len(folds)):
+            overlap = fold_channels[folds[i]].intersection(fold_channels[folds[j]])
+            assert not overlap, f"Leakage detected between fold {folds[i]} and {folds[j]}: {overlap}"
+
+
+def test_ti7_bootstrap_ci_brackets_point_estimate():
+    """T-I7: Bootstrap 95% CI brackets the point estimate on a known fixture."""
+    import numpy as np
+    from scripts.influencer_leakage_ablation import compute_pr_auc_numpy, bootstrap_ci_pr_auc
+
+    rng = np.random.default_rng(42)
+    y_true = rng.binomial(1, 0.3, size=200)
+    y_score = y_true * 0.5 + rng.uniform(0, 0.5, size=200)
+
+    point_est = compute_pr_auc_numpy(y_true, y_score)
+    ci_low, ci_high = bootstrap_ci_pr_auc(y_true, y_score, n_bootstraps=500, seed=42)
+
+    assert ci_low <= point_est <= ci_high, f"CI [{ci_low}, {ci_high}] does not bracket point estimate {point_est}"
+    assert ci_low > 0.0
+    assert ci_high <= 1.0
+
+
+def test_ti8_gate_blocks_training_below_minimum_n(spark):
+    """T-I8: Minimum data gate blocks regressor training if channels < 200."""
+    from src.models.promo_lift_regressor import train_calibration_models
+
+    # Create small dataset with only 15 channels (< 200 minimum gate)
+    data = [(f"ch_{i}", 1.5, 1000.0, 0.05, 0.2, 365.0, 7.0, 0.9, 0.1) for i in range(15)]
+    cols = ["channel_id", "label", "median_views", "engagement_rate", "view_consistency_cv",
+            "channel_age_days", "upload_cadence_days", "domain_purity", "sponsored_rate"]
+    small_df = _safe_df(spark, data, cols)
+
+    res = train_calibration_models(spark, df=small_df, log_to_registry=False)
+    assert res["status"] == "insufficient_data"
+    assert res["usable_in_score"] is False
+
+
+def test_ti9_ablation_script_outputs_report():
+    """T-I9: Ablation report exists and logs Full, Ablated, and Proxy models."""
+    from pathlib import Path
+
+    report = Path("docs/influencer_ablation_report.md")
+    assert report.exists(), "Ablation report docs/influencer_ablation_report.md not found"
+    content = report.read_text(encoding="utf-8")
+    assert "Full Model" in content
+    assert "Ablated Model" in content
+    assert "Proxy-Only Model" in content
+    assert "95% Bootstrap CI" in content
+
+
+def test_ti10_leakage_guard_still_passes():
+    """T-I10: Original leakage guard strictly holds."""
+    cfg = load_influencer_config()
+    feat_set = set(cfg["feature_columns"])
+    label_def = set(cfg["label_definition"]["label_defining_columns"])
+    assert not feat_set.intersection(label_def)
+
+
+def test_ti11_single_engagement_function():
+    """T-I11: Single engagement function is the canonical implementation (grep test)."""
+    import inspect
+    from src.common.engagement import calculate_engagement_expr, calculate_engagement_rate
+
+    # Assert canonical engagement definitions exist and are callable
+    assert callable(calculate_engagement_expr)
+    assert callable(calculate_engagement_rate)
+
+    # Test numerical consistency
+    rate = calculate_engagement_rate(likes=50, dislikes=10, views=1000)
+    assert abs(rate - 0.06) < 1e-6
+    # 0 views handles safely without ZeroDivisionError
+    assert calculate_engagement_rate(likes=10, dislikes=5, views=0) == 0.0
+

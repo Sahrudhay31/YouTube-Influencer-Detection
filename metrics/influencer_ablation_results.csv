@@ -1,0 +1,4 @@
+experiment,feature_count,cv_pr_auc,cv_accuracy,test_pr_auc,ci95_pr_auc,test_accuracy,status
+Full Model (All Features),8,0.3531 +/- 0.0649,0.7010 +/- 0.0273,0.4263,"[0.3216, 0.5374]",0.6967,ok
+Ablated Model (Without video_count),7,0.3771 +/- 0.0409,0.6910 +/- 0.0346,0.4046,"[0.3113, 0.5109]",0.7102,ok
+Proxy-Only Model (video_count Only),1,0.2155 +/- 0.0212,0.5299 +/- 0.0249,0.2812,"[0.2138, 0.3727]",0.5624,ok

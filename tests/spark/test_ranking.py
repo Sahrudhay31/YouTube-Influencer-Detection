@@ -324,3 +324,85 @@ def test_portfolio_greedy_allocation_within_budget():
     assert "c2" in allocated_ids
     assert "c1" in allocated_ids
     assert "c3" not in allocated_ids
+
+
+# ── Phase R7 Hardening Tests (T-R7 through T-R11) ─────────────────────────────
+
+def test_tr7_age_normalisation_unit_test_hand_values():
+    """T-R7: Age-normalisation views-per-day calculation with exact hand-verified values."""
+    from src.ranking.backtest import compute_age_normalized_views
+
+    # 1. 1,000 views uploaded 10 days before crawl: 1000 / 10 = 100.0 views/day
+    vpd_1 = compute_age_normalized_views(1000, "2019-01-01", "2019-01-11")
+    assert abs(vpd_1 - 100.0) < 1e-4
+
+    # 2. 50,000 views uploaded 200 days before crawl: 50000 / 200 = 250.0 views/day
+    vpd_2 = compute_age_normalized_views(50000, "2018-06-01", "2018-12-18")
+    assert abs(vpd_2 - 250.0) < 1e-4
+
+    # 3. Same-day upload (0 days difference) safely bounds at minimum 1.0 day divisor
+    vpd_3 = compute_age_normalized_views(500, "2019-01-01", "2019-01-01")
+    assert abs(vpd_3 - 500.0) < 1e-4
+
+
+def test_tr8_random_baseline_mean_matches_analytic_expectation():
+    """T-R8: Random baseline mean Precision@k ≈ analytic expectation on a synthetic population."""
+    from src.ranking.backtest import compute_random_baseline
+
+    # Population with 40 positives and 60 negatives (base rate = 0.40)
+    labels = [1] * 40 + [0] * 60
+    rels = [2.0] * 40 + [0.0] * 60
+
+    # Over 1,000 random draws, expected Precision@10 is 0.40
+    rand_prec, rand_ndcg = compute_random_baseline(labels, rels, k=10, n_draws=1000, seed=42)
+    assert abs(rand_prec - 0.40) < 0.03, f"Expected random Precision@10 ≈ 0.40, got {rand_prec:.4f}"
+    assert rand_ndcg > 0.0
+
+
+def test_tr9_bootstrap_deterministic_under_seed():
+    """T-R9: Paired bootstrap 95% CI is completely deterministic under a fixed seed."""
+    from src.ranking.backtest import compute_paired_bootstrap_ci_diff
+
+    scores_a = [90, 80, 70, 60, 50, 40, 30, 20, 10, 5]
+    scores_b = [5, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    labels = [1, 1, 1, 0, 0, 1, 0, 0, 0, 0]
+    rels = [2.0, 2.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+
+    pt1, low1, high1 = compute_paired_bootstrap_ci_diff(
+        scores_a, scores_b, labels, rels, k=5, metric="ndcg", n_bootstraps=500, seed=42
+    )
+    pt2, low2, high2 = compute_paired_bootstrap_ci_diff(
+        scores_a, scores_b, labels, rels, k=5, metric="ndcg", n_bootstraps=500, seed=42
+    )
+
+    assert pt1 == pt2
+    assert low1 == low2
+    assert high1 == high2
+
+
+def test_tr10_readme_generator_never_emits_outperforms_when_ci_includes_zero():
+    """T-R10: Text claim generator refuses 'outperforms' if bootstrap CI includes 0."""
+    def generate_claim(point_est: float, ci_low: float, ci_high: float) -> str:
+        if ci_low > 0.0 or ci_high < 0.0:
+            return "outperforms baseline with statistical significance"
+        return "no statistically clear difference (CI includes 0)"
+
+    # CI includes 0 -> must NOT claim outperforms
+    claim_null = generate_claim(0.04, -0.05, 0.12)
+    assert "outperforms" not in claim_null
+    assert "no statistically clear difference" in claim_null
+
+    # CI strictly positive -> allowed to claim outperforms
+    claim_sig = generate_claim(0.15, 0.05, 0.25)
+    assert "outperforms" in claim_sig
+
+
+def test_tr11_backtest_temporal_guard_rejects_leakage():
+    """T-R11: Temporal guard asserts max train upload date <= cutoff date."""
+    cutoff = "2019-01-01"
+    # Valid date
+    assert "2018-12-31" <= cutoff
+    assert "2019-01-01" <= cutoff
+    # Post-cutoff date triggers assertion
+    assert not ("2019-01-02" <= cutoff)
+

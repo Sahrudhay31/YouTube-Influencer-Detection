@@ -70,3 +70,19 @@
 2. **Channel Splitting Integrity:** All machine learning splits (train/val/test) MUST group by `channel_id` to prevent data leakage between identical creator upload styles.
 3. **Missing Ratings Handling:** The null rate in `like_count` and `dislike_count` correlates with disabled public ratings on select videos. Feature engineering functions must impute with median or flag as unrated rather than dropping the video.
 4. **Channel Name Joins:** Downstream gold tables and the Streamlit application join `silver/youniverse_channels` on `channel_id` to provide human-readable channel names alongside channel IDs and direct YouTube URLs.
+
+---
+
+## 5. Canonical Behavioral Metrics
+
+### Engagement Rate (`engagement_rate`)
+Defined uniformly in `src/common/engagement.py`:
+$$\text{Engagement Rate} = \frac{\sum \text{likes} + \sum \text{dislikes}}{\max(\sum \text{views}, 1.0)}$$
+- **Implementation:** `src/common/engagement.py::calculate_engagement_expr` (PySpark Column expression) and `calculate_engagement_rate` (scalar Python function).
+- **Consumer Modules:**
+  - `src/influencer/features.py` for channel behavioral feature engineering.
+  - `src/ranking/backtest.py` for pre-cutoff and post-cutoff evaluation.
+  - `src/ranking/score.py` for composite promotion-potential scoring.
+  - `scripts/build_gold_cohort.py` for gold scored creators table.
+- **Null / Missing Value Rule:** When `like_count` or `dislike_count` are null (disabled ratings), they coalesce to $0.0$; when `views` is 0, engagement rate resolves to $0.0$.
+

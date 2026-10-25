@@ -8,7 +8,7 @@ from __future__ import annotations
 from src.common.config import get_settings, get_hdfs_uri
 
 
-def get_spark(app_name: str | None = None, local_mode: bool = False):
+def get_spark(app_name: str | None = None, local_mode: bool = False, master: str | None = None):
     """
     Create or retrieve the active SparkSession.
 
@@ -18,6 +18,8 @@ def get_spark(app_name: str | None = None, local_mode: bool = False):
         Override the app name from settings.yaml.
     local_mode : bool
         If True, configures filesystem as local file:/// instead of HDFS namenode.
+    master : str | None
+        Override the master string (e.g. local[1], local[2]).
     """
     import os
     import sys
@@ -55,7 +57,7 @@ def get_spark(app_name: str | None = None, local_mode: bool = False):
 
     builder = (
         SparkSession.builder
-        .master(cfg.get("master", "local[*]"))
+        .master(master or cfg.get("master", "local[*]"))
         .appName(app_name or cfg.get("app_name", "yt-influencer-pipeline"))
         .config("spark.sql.shuffle.partitions", str(cfg.get("shuffle_partitions", 8)))
     )

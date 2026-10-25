@@ -61,9 +61,15 @@ def build_channel_features(
         F.max("_upload_ts").alias("_latest_upload"),
     )
 
+    from src.common.engagement import calculate_engagement_expr
+
     # 2. Derived behavioral features
-    # Engagement rate = total engagement / max(1, total views)
-    eng_rate = F.col("_total_engagement") / F.when(F.col("_total_views") > 0, F.col("_total_views")).otherwise(F.lit(1.0))
+    # Engagement rate = total engagement / max(1, total views) via canonical formula
+    eng_rate = calculate_engagement_expr(
+        like_col="_total_engagement",
+        dislike_col=F.lit(0.0),
+        view_col="_total_views",
+    )
 
     # View consistency CV = stddev_views / max(1, mean_views) (coalesced to 0.0 if null for 1-video channels)
     cv_col = F.coalesce(
