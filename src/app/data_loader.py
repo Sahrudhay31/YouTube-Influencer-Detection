@@ -1,16 +1,18 @@
 """
 src/app/data_loader.py
-Phase 8 — Fast cached data loaders for Streamlit app.
+Fast cached data loaders for Streamlit app.
 Crucial rule: MUST NOT start or import Spark per page load (T-A1).
 Reads precomputed gold tables, metrics registry, logs, and config.
 """
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import streamlit as st
 import yaml
 
 from src.common.paths import project_root
@@ -20,6 +22,7 @@ def get_project_root() -> Path:
     return project_root()
 
 
+@st.cache_data(show_spinner=False)
 def load_scored_creators() -> pd.DataFrame:
     """Load precomputed gold scored creators table."""
     root = get_project_root()
@@ -35,15 +38,13 @@ def load_scored_creators() -> pd.DataFrame:
         fallback_path = root / "data" / "gold" / "channel_influencer_profiles"
         if fallback_path.exists():
             df = pd.read_parquet(fallback_path)
-            # Fill default score columns if missing
             if "promotion_potential_score" not in df.columns:
                 df["promotion_potential_score"] = 50.0
             if "raw_score" not in df.columns:
                 df["raw_score"] = 50.0
         else:
-            df = pd.DataFrame()
+            return pd.DataFrame()
 
-    # Clean display columns
     if not df.empty:
         if "channel_name" not in df.columns:
             ch_pq = root / "data" / "silver" / "youniverse_channels"
@@ -72,6 +73,7 @@ def load_scored_creators() -> pd.DataFrame:
     return df
 
 
+@st.cache_data(show_spinner=False)
 def load_model_registry(registry_path: Path | None = None) -> pd.DataFrame:
     """Load metrics/model_registry.csv without hardcoding any numbers (T-A4)."""
     if registry_path is None:
@@ -80,13 +82,22 @@ def load_model_registry(registry_path: Path | None = None) -> pd.DataFrame:
     if not registry_path.exists():
         return pd.DataFrame()
 
-    df = pd.read_csv(registry_path)
-    return df
+    return pd.read_csv(registry_path)
 
 
+@st.cache_data(show_spinner=False)
 def load_backtest_results() -> pd.DataFrame:
     """Load metrics/backtest_results.csv."""
     path = get_project_root() / "metrics" / "backtest_results.csv"
+    if not path.exists():
+        return pd.DataFrame()
+    return pd.read_csv(path)
+
+
+@st.cache_data(show_spinner=False)
+def load_influencer_ablation() -> pd.DataFrame:
+    """Load metrics/influencer_ablation_results.csv."""
+    path = get_project_root() / "metrics" / "influencer_ablation_results.csv"
     if not path.exists():
         return pd.DataFrame()
     return pd.read_csv(path)
@@ -143,23 +154,132 @@ def load_api_call_logs(limit: int = 50) -> list[dict[str, Any]]:
     return logs[-limit:]
 
 
-def load_rate_card() -> dict[str, float]:
-    """Load benchmark CPM rate card from config/rate_card.yaml."""
+def load_rate_card() -> dict[str, dict[str, float]]:
+    """
+    Load benchmark CPM and fixed overhead rate card from config/rate_card.yaml.
+    Returns:
+      {
+         'Nano': {'cpm': 15.0, 'overhead': 50.0},
+         'Micro': {'cpm': 20.0, 'overhead': 100.0},
+         'Mid': {'cpm': 22.5, 'overhead': 175.0},
+         'Macro': {'cpm': 25.0, 'overhead': 250.0},
+         'Mega': {'cpm': 35.0, 'overhead': 500.0},
+      }
+    """
     p = get_project_root() / "config" / "rate_card.yaml"
+    rate_card: dict[str, dict[str, float]] = {
+        "Nano": {"cpm": 15.0, "overhead": 50.0},
+        "Micro": {"cpm": 20.0, "overhead": 100.0},
+        "Mid": {"cpm": 22.5, "overhead": 175.0},
+        "Macro": {"cpm": 25.0, "overhead": 250.0},
+        "Mega": {"cpm": 35.0, "overhead": 500.0},
+    }
     if p.exists():
-        with open(p, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-            return {
-                tier.capitalize(): float(spec.get("cpm_usd", 20.0))
-                for tier, spec in data.get("rate_card", {}).items()
-            }
-    return {"Nano": 15.0, "Micro": 20.0, "Macro": 25.0, "Mega": 35.0}
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+                tiers_data = data.get("tiers", {})
+                for tier, spec in tiers_data.items():
+                    name = tier.capitalize()
+                    cpm = float(spec.get("cpm", spec.get("cpm_usd", 20.0)))
+                    overhead = float(spec.get("fixed_overhead", spec.get("overhead", 100.0)))
+                    rate_card[name] = {"cpm": cpm, "overhead": overhead}
+        except Exception:
+            pass
+
+    return rate_card
 
 
 def load_scoring_config() -> dict[str, Any]:
     """Load scoring configuration from config/scoring.yaml."""
     p = get_project_root() / "config" / "scoring.yaml"
     if p.exists():
-        with open(p, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                return yaml.safe_load(f)
+        except Exception:
+            return {}
     return {}
+
+
+def load_data_freshness() -> dict[str, Any]:
+    """
+    Inspect files on disk to report freshness timestamps and row counts
+    WITHOUT starting Spark or loading unnecessary parquet partitions.
+    """
+    root = get_project_root()
+    layers = {
+        "gold_scored": {
+            "path": root / "data" / "gold" / "scored_creators.parquet",
+            "name": "Gold Scored Creators",
+            "expected_layer": "Gold",
+        },
+        "silver_channels": {
+            "path": root / "data" / "silver" / "youniverse_channels",
+            "name": "Silver Channels",
+            "expected_layer": "Silver",
+        },
+        "silver_metadata": {
+            "path": root / "data" / "silver" / "youniverse_metadata",
+            "name": "Silver Videos Metadata",
+            "expected_layer": "Silver",
+        },
+    }
+
+    freshness_info = []
+    for key, spec in layers.items():
+        path = spec["path"]
+        exists = path.exists()
+        mtime = None
+        mtime_str = "n/a"
+        size_mb = 0.0
+
+        if exists:
+            try:
+                if path.is_file():
+                    stat = path.stat()
+                    mtime = datetime.fromtimestamp(stat.st_mtime, timezone.utc)
+                    size_mb = round(stat.st_size / (1024 * 1024), 2)
+                elif path.is_dir():
+                    # Pick most recent parquet file in dir
+                    files = list(path.rglob("*.parquet"))
+                    if files:
+                        latest = max(files, key=lambda f: f.stat().st_mtime)
+                        stat = latest.stat()
+                        mtime = datetime.fromtimestamp(stat.st_mtime, timezone.utc)
+                        size_mb = round(sum(f.stat().st_size for f in files) / (1024 * 1024), 2)
+                    else:
+                        stat = path.stat()
+                        mtime = datetime.fromtimestamp(stat.st_mtime, timezone.utc)
+                if mtime:
+                    mtime_str = mtime.strftime("%Y-%m-%d %H:%M UTC")
+            except Exception:
+                pass
+
+        freshness_info.append({
+            "key": key,
+            "name": spec["name"],
+            "layer": spec["expected_layer"],
+            "exists": exists,
+            "modified": mtime_str,
+            "size_mb": size_mb,
+            "path": str(path.relative_to(root)),
+        })
+
+    # Detect active storage mode from config without starting Spark
+    cfg_path = root / "config" / "settings.yaml"
+    storage_mode = "Local (file:///)"
+    if cfg_path.exists():
+        try:
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                sett = yaml.safe_load(f)
+                scheme = sett.get("spark", {}).get("storage_scheme", "file:///")
+                if "hdfs" in scheme.lower():
+                    storage_mode = "HDFS Cluster (hdfs://)"
+        except Exception:
+            pass
+
+    return {
+        "tables": freshness_info,
+        "storage_mode": storage_mode,
+    }

@@ -4,6 +4,45 @@ All notable changes to the **Domain-Aware YouTube Influencer Detection & Promoti
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Phase R9: Dashboard v2 Upgrade (InfluencerAI)] - 2026-10-25
+
+### Added
+- **Pure Logic Architecture (`src/app/`)**:
+  - `src/app/formatters.py`: Formatting helpers for subscribers (K/M), views (with thousands separators), percentages, promo lift (1.41x), and currency.
+  - `src/app/evidence.py`: Evidence badge logic (`High` vs `Partial`) and precise dynamic weight renormalisation message generation per ADR-008.
+  - `src/app/leaderboard_logic.py`: Pure filtering, deterministic tie-breaking (ranking full-evidence creators first with secondary raw score sorting), pagination, and CSV export with compliance disclaimer.
+  - `src/app/quota_service.py`: Quota calculation, Pacific-midnight time until reset, per-run safety cap validation, and live confirmation gating.
+  - `tests/unit/test_dashboard_v2.py`: 13 comprehensive unit tests covering formatting, evidence flags, tie-breaking, pagination, live safety guards, and clock-injected Pacific-midnight rollover.
+- **Find Influencers & Allocator Upgrades (`src/app/pages_impl/find_influencers.py`)**:
+  - Pinned Channel Name column, removed index column, and configured custom `st.dataframe` column formats (`ProgressColumn`, `LinkColumn`, `NumberColumn`).
+  - Added "Rank full-evidence creators first" toggle with explanatory tooltip to eliminate saturation ties.
+  - Added side-by-side Creator Comparison feature with 2-4 channel multi-trace radar overlay and comparative metrics table.
+  - Added 5 beauty presets and clear out-of-domain warning banner when briefs fall outside Beauty & Personal Care.
+  - Added top 3 matched lexicon term drivers and alternative domain probabilities.
+  - Upgraded greedy portfolio allocator with user-configurable rate cards (CPM + fixed overhead per tier), budget utilization progress, and typical view estimations.
+  - Secured Live Discovery tab: Dry-run default, explicit two-step user confirmation checkbox, Pacific midnight quota monitoring, and query cost preview.
+- **Creator Card Upgrades (`src/app/pages_impl/creator_card.py`)**:
+  - Replaced vague confidence messages with exact component-level missing weight and renormalisation multiplier explanation.
+  - Dual score presentation: Percentile Rank (0-100) vs Raw Score (0-100).
+  - 6-component radar chart and weighted points contribution waterfall bar chart including saturation and competitor penalties.
+  - Sponsorship track record showing organic vs sponsored counts and the ≥3 sponsored + ≥3 organic videos requirement for promo lift.
+  - Added persistent "+ Add to Shortlist" button and sidebar shortlist drawer with CSV export.
+- **Model Results & Governance Upgrades (`src/app/pages_impl/model_results.py`)**:
+  - Model registry table with automated Governance Flags (`⚠️ Suspicious Acc (>0.98)`, `⚠️ Overfit Gap (>0.10)`, `⚠️ Negative R²`) and "How to read this" guide.
+  - Linear SVC, Naive Bayes, and Logistic Regression domain classifier comparison against Keyword Rule and Majority baselines.
+  - Influencer classification feature ablation study table and bar chart with 95% bootstrap confidence intervals.
+  - Three-cutoff time-split backtest comparison chart (NDCG@10 across 2018-01-01, 2018-07-01, 2019-01-01) and full metrics table.
+  - Dynamic auto-generated honest findings callout comparing score performance against MedianViews, Activity, and Random baselines.
+- **Pipeline Status Upgrades (`src/app/pages_impl/pipeline_status.py`)**:
+  - Quota gauge for daily 8,000 unit budget, 7-day consumption history chart from ledger, and next Pacific-midnight reset timer.
+  - 30-day raw-API retention monitor with days to purge per partition.
+  - Data lake freshness monitor reporting modified timestamps, MB sizes, and active storage mode (`file:///` vs HDFS).
+- **Navigation & Global UX (`src/app/main.py`, `src/app/components.py`)**:
+  - Replaced inaccurate claims regarding HDFS and holdout cutoffs with accurate architecture descriptions.
+  - Added "About These Numbers" glossary in sidebar.
+  - Reduced red overuse in favor of sky-blue accent and emerald/amber semantic evidence colors.
+  - Guaranteed 100% Spark-free frontend execution.
+
 ## [Phase R6: Live Creator Discovery & Real-Time YouTube API] - 2026-10-23
 
 ### Added

@@ -1,17 +1,29 @@
 """
 src/app/pages_impl/pipeline_status.py
-Page 4: Pipeline Status & YouTube Governance.
-Monitors API quota consumption, audit logs, 30-day retention compliance, and data layer freshness.
+Page 4: Pipeline Status & YouTube Governance (InfluencerAI v2).
+Monitors API quota consumption, Pacific ledger 7-day history, audit logs,
+30-day retention partition countdown, and data layer freshness.
 """
 from __future__ import annotations
 
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 from src.app.components import render_header, render_disclaimer
-from src.app.data_loader import load_quota_ledger, load_api_call_logs, get_project_root
+from src.app.data_loader import (
+    load_quota_ledger,
+    load_api_call_logs,
+    load_data_freshness,
+    get_project_root,
+)
+from src.app.quota_service import (
+    inspect_quota_status,
+    get_seven_day_quota_history,
+)
 from src.common.config import get_quota_config, get_settings
 
 
@@ -31,113 +43,168 @@ def render_pipeline_status_page() -> None:
     per_run_cap = quota_cfg.get("per_run_max_units", 1500)
 
     ledger = load_quota_ledger()
-    # Pacific date key or today's date
-    now_utc = datetime.now(timezone.utc)
-    today_key = now_utc.strftime("%Y-%m-%d")
-    today_entry = ledger.get(today_key, {"units_used": 0, "search_calls": 0, "exhausted": False})
+    quota_status = inspect_quota_status(
+        ledger=ledger,
+        daily_cap=daily_cap,
+        search_cap=search_cap,
+        per_run_cap=per_run_cap,
+    )
 
-    units_used = int(today_entry.get("units_used", 0))
-    search_used = int(today_entry.get("search_calls", 0))
-    is_exhausted = bool(today_entry.get("exhausted", False))
+    units_used = quota_status["units_used"]
+    remaining_units = quota_status["remaining_units"]
+    search_used = quota_status["search_used"]
+    is_exhausted = quota_status["is_exhausted"]
+    pct_used = quota_status["pct_used"]
 
-    # ── Section 1: Quota Health ──────────────────────────────────────────────
-    st.subheader("1. Daily YouTube API Quota Status")
+    # ── Section 1: Daily Quota Status ─────────────────────────────────────────
+    st.subheader("1. Daily YouTube API Quota Status (Pacific Ledger)")
 
     q_col1, q_col2, q_col3, q_col4 = st.columns(4)
-
-    remaining_units = max(0, daily_cap - units_used)
-    pct_used = (units_used / daily_cap) * 100
-
     q_col1.metric("Units Used Today", f"{units_used:,} / {daily_cap:,}", f"{pct_used:.1f}% consumed")
     q_col2.metric("Remaining Units", f"{remaining_units:,}", delta=f"-{units_used} used", delta_color="normal")
     q_col3.metric("Search Calls Today", f"{search_used} / {search_cap}", f"{search_cap - search_used} left")
+    q_col4.metric("Reset Rollover", quota_status["time_to_reset"], help="Time until next Pacific Midnight (America/Los_Angeles)")
 
+    # Status message & progress bar
     if is_exhausted:
-        q_col4.error("🔴 Server Exhausted")
+        st.error("🔴 **API Quota Server Exhausted**: Google API returned HTTP 403 quotaExceeded. Execution halted until Pacific midnight.")
     elif units_used > daily_cap * 0.90:
-        q_col4.warning("🟡 Near Limit")
+        st.warning("🟡 **Quota Warning**: Over 90% of daily unit budget consumed. Live search should be used selectively.")
     else:
-        q_col4.success("🟢 Healthy (Quota Guard Active)")
+        st.success("🟢 **Quota Guard Active**: Operating safely within 8,000 unit daily allocation with 20% Google Cloud safety margin.")
 
-    # Visual quota progress bar
-    st.progress(min(units_used / daily_cap, 1.0))
-    st.caption(f"Enforced by `src/ingestion/quota_guard.py`. Per-run limit: **{per_run_cap:,} units**. Ledger reset: Pacific Midnight.")
+    st.progress(min(units_used / max(1, daily_cap), 1.0), text=f"Daily Quota: {units_used:,} of {daily_cap:,} units utilized")
+    st.caption(f"Enforced by `src/ingestion/quota_guard.py`. Per-run ceiling: **{per_run_cap:,} units**. Ledger reset: Pacific Midnight.")
 
-    # ── Section 2: 30-Day Data Retention Compliance ──────────────────────────
+    # ── Section 2: 7-Day Quota Consumption History ────────────────────────────
     st.markdown("---")
-    st.subheader("2. YouTube Terms 30-Day Retention Compliance")
+    st.subheader("2. 7-Day Quota Consumption History")
 
-    raw_api_retention_days = settings.get("retention", {}).get("raw_api_days", 30)
-    refresh_warning_days = settings.get("retention", {}).get("refresh_warning_days", 25)
+    history_records = get_seven_day_quota_history(ledger)
+    if history_records:
+        h_df = pd.DataFrame(history_records)
+        fig_hist = px.bar(
+            h_df,
+            x="date",
+            y="units_used",
+            title="Daily Units Consumed (Last 7 Recorded Days)",
+            color="units_used",
+            color_continuous_scale="Blues",
+            text="units_used",
+        )
+        fig_hist.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#CBD5E1"),
+            margin=dict(l=10, r=10, t=35, b=10),
+            height=260,
+            xaxis=dict(title="Pacific Date (YYYY-MM-DD)"),
+            yaxis=dict(title="Units Consumed", range=[0, max(daily_cap, max(h_df['units_used']) + 500)]),
+            coloraxis_showscale=False,
+        )
+        fig_hist.add_hline(y=daily_cap, line_dash="dot", line_color="#EF4444", annotation_text="8k Cap")
+        st.plotly_chart(fig_hist, use_container_width=True)
+    else:
+        st.info("No prior ledger history recorded in state/quota_ledger.json.")
 
-    ret_col1, ret_col2 = st.columns([2, 1])
-    with ret_col1:
+    # ── Section 3: 30-Day Retention Compliance Monitor ────────────────────────
+    st.markdown("---")
+    st.subheader("3. YouTube Terms 30-Day Retention Compliance Monitor")
+
+    raw_api_days = settings.get("retention", {}).get("raw_api_days", 30)
+    warning_days = settings.get("retention", {}).get("refresh_warning_days", 25)
+
+    root = get_project_root()
+    raw_api_dir = root / "data" / "raw" / "api"
+    partitions = []
+    if raw_api_dir.exists():
+        for d in raw_api_dir.iterdir():
+            if d.is_dir() and "dt=" in d.name:
+                dt_str = d.name.replace("dt=", "")
+                try:
+                    p_date = datetime.strptime(dt_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                    age_days = (datetime.now(timezone.utc) - p_date).days
+                    days_left = max(0, raw_api_days - age_days)
+                    status = "🚨 EXPIRED (Purge Imminent)" if days_left <= 0 else ("⚠️ Expiring Soon" if days_left <= (raw_api_days - warning_days) else "✅ Compliant")
+                    partitions.append({
+                        "Partition": d.name,
+                        "Capture Date": dt_str,
+                        "Age (Days)": age_days,
+                        "Days to Purge": days_left,
+                        "Compliance Status": status,
+                    })
+                except Exception:
+                    pass
+
+    r_col1, r_col2 = st.columns([2, 1])
+    with r_col1:
         st.markdown(
             f"""
-            - **Raw API Partition Retention:** Max **{raw_api_retention_days} days** (enforced by `src/maintenance/purge_api_data.py`).
-            - **Privacy Salt Hashing:** Commenter IDs salted via SHA-256 before disk writes (`COMMENT_HASH_SALT`).
-            - **Automated Verification:** Any raw partition older than {raw_api_retention_days} days is flagged for automated purging.
+            - **Raw API Partition Retention:** Max **{raw_api_days} days** (enforced automatically by `src/maintenance/purge_api_data.py`).
+            - **Automated Warning Threshold:** Day {warning_days}+ triggers refresh or purge flag.
+            - **Privacy Comment Hashing:** Commenter IDs are salted via SHA-256 before disk writes (`COMMENT_HASH_SALT`).
             """
         )
 
-    with ret_col2:
-        st.markdown(
-            """
-            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 14px; text-align: center;">
-                <span style="font-size: 1.5rem;">🛡️</span>
-                <div style="color: #34D399; font-weight: 700; font-size: 1.05rem;">Retention Compliant</div>
-                <div style="color: #94A3B8; font-size: 0.82rem;">Zero Stale API Partitions</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+    with r_col2:
+        if any(p["Days to Purge"] == 0 for p in partitions):
+            st.error("🚨 Stale Partitions Detected. Run purge_api_data.py.")
+        else:
+            st.markdown(
+                """
+                <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 12px; text-align: center;">
+                    <span style="font-size: 1.4rem;">🛡️</span>
+                    <div style="color: #34D399; font-weight: 700; font-size: 1.0rem;">Retention Compliant</div>
+                    <div style="color: #94A3B8; font-size: 0.8rem;">Zero Stale API Partitions (>30d)</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-    # ── Section 3: Recent API Audit Log ──────────────────────────────────────
+    if partitions:
+        st.dataframe(pd.DataFrame(partitions), hide_index=True, use_container_width=True)
+    else:
+        st.caption("No raw API date-partition directories currently stored in `data/raw/api/`.")
+
+    # ── Section 4: Recent API Audit Log ───────────────────────────────────────
     st.markdown("---")
-    st.subheader("3. Audit Trail: Recent API Invocations")
-    st.caption("Logged by `src/enrichment/youtube_client.py` to `logs/api_calls.jsonl`. API keys are never written to logs.")
+    st.subheader("4. Recent API Audit Trail (logs/api_calls.jsonl)")
 
     api_logs = load_api_call_logs(limit=25)
     if api_logs:
         log_df = pd.DataFrame(api_logs)
-        display_log_cols = [c for c in ["ts", "endpoint", "units_charged", "status_code", "error"] if c in log_df.columns]
-        st.dataframe(
-            log_df[display_log_cols].rename(columns={
-                "ts": "Timestamp (UTC)",
-                "endpoint": "Endpoint",
-                "units_charged": "Units Charged",
-                "status_code": "HTTP Status",
-                "error": "Error / Mode",
-            }),
-            use_container_width=True,
-            height=250,
-        )
+        display_log_cols = [c for c in ["timestamp", "method", "units", "status", "key_tag", "param_hash", "endpoint", "units_charged", "status_code"] if c in log_df.columns]
+        st.dataframe(log_df[display_log_cols], hide_index=True, use_container_width=True, height=220)
     else:
-        st.info("No API logs found in `logs/api_calls.jsonl`. API calls will be logged on live execution.")
+        st.info("No API invocations logged in `logs/api_calls.jsonl` yet.")
 
-    # ── Section 4: Dataset Storage Layer Metrics ─────────────────────────────
+    # ── Section 5: Data Lake Freshness & Environment Mode ─────────────────────
     st.markdown("---")
-    st.subheader("4. Data Lake Architecture & Freshness")
+    st.subheader("5. Data Lake Storage Freshness & Architecture")
 
-    root = get_project_root()
-    d_col1, d_col2, d_col3 = st.columns(3)
+    freshness_data = load_data_freshness()
+    f_col1, f_col2 = st.columns([1, 2])
 
-    # Check directories
-    silver_path = root / "data" / "silver" / "youniverse_metadata"
-    gold_path = root / "data" / "gold" / "scored_creators.parquet"
+    with f_col1:
+        st.metric("Active Storage Mode", freshness_data["storage_mode"], help="Configured in config/settings.yaml (file:/// vs hdfs://)")
+        st.write("- **Engine**: Spark ML batch pipelines")
+        st.write("- **Storage**: Snappy Columnar Parquet")
+        st.write("- **Python**: 3.11 venv (Standalone)")
 
-    silver_ok = silver_path.exists()
-    gold_ok = gold_path.exists()
-
-    d_col1.metric("Raw Layer (YouNiverse)", "English Baseline", "Zenodo 2019")
-    d_col2.metric("Silver Layer (Parquet)", "Partitioned & Filtered", "Active" if silver_ok else "Pending")
-    d_col3.metric("Gold Layer (Features & Scores)", "127 Profiles", "Calibrated" if gold_ok else "Pending")
-
-    st.markdown(
-        f"""
-        <div style="background: rgba(30, 41, 59, 0.4); border-radius: 8px; padding: 12px; margin-top: 10px; font-size: 0.85rem; color: #94A3B8;">
-            <strong>Runtime Stack:</strong> Python {sys.version.split()[0]} | PySpark 3.5.3 | Hadoop 3.2.1 | Streamlit {st.__version__} | OS: Windows
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    with f_col2:
+        table_df = pd.DataFrame(freshness_data["tables"])
+        st.dataframe(
+            table_df.rename(columns={
+                "name": "Data Asset",
+                "layer": "Lake Layer",
+                "exists": "Status",
+                "modified": "Last Modified",
+                "size_mb": "Size (MB)",
+                "path": "Relative Path",
+            }),
+            column_config={
+                "Status": st.column_config.CheckboxColumn("Exists", disabled=True),
+            },
+            hide_index=True,
+            use_container_width=True,
+        )

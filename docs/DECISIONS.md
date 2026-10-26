@@ -149,4 +149,21 @@ All key architectural decisions for the **Domain-Aware YouTube Influencer Detect
 - **Decision:** Rewrote `scripts/scalability_benchmark.py` to discard cold runs, execute 3 timed repeats after JIT compilation, compute warm median and IQR, enforce explicit schema parsing for CSV reads, and automatically flag `superlinear_suspect` if speedup exceeds physical core count.
 - **Consequences:** Realistic multi-core scaling results: `local[1]` (0.190s) -> `local[2]` (0.148s, 1.28x speedup, 0.64 efficiency) -> `local[4]` (0.128s, 1.48x speedup, 0.37 efficiency on 50k rows). Columnar Snappy Parquet achieves 1.7x faster reads than raw CSV. Documented in `metrics/scalability.csv` and verified by tests T-B1 to T-B3.
 
+---
+
+## ADR-017: Dashboard v2: Evidence Transparency, Tie-Breaking & Governance Remediation
+- **Date:** 2026-10-25
+- **Status:** Accepted (Phase R9 / Dashboard v2)
+- **Context:** The legacy dashboard UI presented several governance and usability issues: (1) scores saturated at 100.0 without evidence transparency, masking channels missing comment or sponsorship data, (2) ties were unordered, (3) domain classification confidence was mislabeled as a calibrated probability rather than a TF-IDF match score, (4) portfolio allocation lacked overhead configuration, (5) live discovery lacked two-step confirmation safeguards, (6) model registry lacked overfit/suspicious accuracy flags, and (7) inaccurate claims claimed running HDFS and single holdout cutoffs.
+- **Decision:**
+  1. Implemented explicit evidence badges (`Full Evidence` vs `Partial Evidence`) and dynamic weight renormalisation notes based on `config/scoring.yaml`.
+  2. Implemented dual score presentation (percentile rank vs raw composite score) and deterministic tie-breaking (ranking full-evidence creators first with secondary raw score sorting).
+  3. Upgraded product brief matcher to display top 3 lexicon term drivers, top 2 alternative domains, and out-of-domain detection.
+  4. Upgraded portfolio allocator with user-configurable rate cards (CPM + fixed overhead per tier), budget utilization progress, and typical view estimations.
+  5. Enforced dry-run default on live discovery with explicit two-step user confirmation, Pacific midnight quota monitoring, and strict per-run safety ceilings.
+  6. Upgraded Model Results with automated governance flags (overfit gap > 0.10, suspicious accuracy > 0.98), 3-cutoff backtest charts, and empirical findings generation.
+  7. Modularized all pure business logic (`formatters.py`, `evidence.py`, `leaderboard_logic.py`, `quota_service.py`) in `src/app/` for headless unit testing without PySpark imports.
+- **Consequences:** Defensible, transparent, and compliant presentation layer satisfying all BDA governance requirements with 100% Spark-free execution and 98 passing test suites.
+
+
 

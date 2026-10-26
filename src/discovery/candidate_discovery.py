@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 from src.app.domain_predictor import DomainPredictor
-from src.common.paths import local
+from src.common.paths import hdfs, local
 from src.discovery.query_builder import build_search_queries
 from src.enrichment.youtube_client import YouTubeClient
 
@@ -188,14 +188,26 @@ def discover_live_candidates(
     if not df_live.empty:
         df_live = df_live.sort_values(by="promotion_potential_score", ascending=False).reset_index(drop=True)
 
-        # Persist raw API partition under data/raw/api/dt=YYYY-MM-DD/
+        # Persist raw API partition under HDFS /bda/raw/api/dt=YYYY-MM-DD/
         today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        hdfs_partition_path = hdfs("raw_api", f"dt={today_str}")
+
+        # Local staging backup
         api_dir = local("raw", f"api/dt={today_str}")
         api_dir.mkdir(parents=True, exist_ok=True)
         dump_path = api_dir / f"live_discovery_{int(datetime.now(timezone.utc).timestamp())}.json"
         with open(dump_path, "w", encoding="utf-8") as f:
             json.dump({"query": product_brief, "channels": rows}, f, indent=2)
-        logger.info("[Discovery] Saved live discovery partition to %s", dump_path)
+
+        # Attempt direct HDFS persistence
+        try:
+            from src.common.spark_session import get_spark
+            spark = get_spark("LiveDiscoveryHDFSIngest", local_mode=False)
+            df_spark = spark.createDataFrame(df_live)
+            df_spark.write.mode("append").json(hdfs_partition_path)
+            logger.info("[Discovery] Persisted %d live records directly to HDFS: %s", len(rows), hdfs_partition_path)
+        except Exception as hdfs_err:
+            logger.warning("[Discovery] Direct HDFS write deferred (%s); partition staged at %s for HDFS sync.", hdfs_err, dump_path)
 
     return df_live
 

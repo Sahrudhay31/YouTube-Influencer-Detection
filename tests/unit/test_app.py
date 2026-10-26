@@ -22,6 +22,10 @@ def test_ta1_app_imports_without_spark():
     import src.app.domain_predictor
     import src.app.portfolio_optimizer
     import src.app.components
+    import src.app.formatters
+    import src.app.evidence
+    import src.app.leaderboard_logic
+    import src.app.quota_service
 
     # Verify no app module has an import of pyspark
     app_files = [
@@ -29,6 +33,10 @@ def test_ta1_app_imports_without_spark():
         Path("src/app/domain_predictor.py"),
         Path("src/app/portfolio_optimizer.py"),
         Path("src/app/components.py"),
+        Path("src/app/formatters.py"),
+        Path("src/app/evidence.py"),
+        Path("src/app/leaderboard_logic.py"),
+        Path("src/app/quota_service.py"),
         Path("src/app/main.py"),
         Path("src/app/pages_impl/find_influencers.py"),
         Path("src/app/pages_impl/creator_card.py"),

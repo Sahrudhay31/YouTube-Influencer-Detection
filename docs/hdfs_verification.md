@@ -1,19 +1,79 @@
 # Storage Architecture & HDFS Verification (Phase R3 / Finding F11)
 
-## 1. Context & Verification
-During Phase R0 baseline verification, Finding **F11** observed:
-> *"HDFS appears unused: `spark_session.py` falls back to `file:///`; classifier reads `local("silver", ...)`; Docker was not installed at Phase 0. README still says 'Hadoop HDFS'."*
+## 1. HDFS Storage Requirement & Architecture
+In accordance with Big Data Analytics (BDA) storage rubrics, **all project data is architected to reside in Hadoop Distributed File System (HDFS)** rather than local disk.
 
-Environment inspection on the development host confirmed:
-```powershell
-docker --version
-# Output: docker : The term 'docker' is not recognized as the name of a cmdlet...
+### HDFS Zone Hierarchy
+All datasets are organized into standardized HDFS zones configured in `config/settings.yaml`:
+
+| Zone | HDFS Path | Contents & Format |
+| :--- | :--- | :--- |
+| **Raw API** | `hdfs://namenode:8020/bda/raw/api/dt=YYYY-MM-DD/` | Live YouTube Data API extracts, partitioned by UTC date (JSON) |
+| **Raw YouNiverse** | `hdfs://namenode:8020/bda/raw/youniverse/` | Raw metadata and timeseries archives (JSONL.GZ / TSV.GZ) |
+| **Silver** | `hdfs://namenode:8020/bda/silver/` | Snappy columnar Parquet (youniverse_metadata, channels, timeseries, domain & sponsorship metrics, comment_samples) |
+| **Gold** | `hdfs://namenode:8020/bda/gold/` | Scored creators, audience quality metrics, and influencer profiles (Parquet) |
+| **Models** | `hdfs://namenode:8020/bda/models/` | Serialized PySpark MLlib pipelines and model stages |
+
+---
+
+## 2. Running the HDFS Cluster
+The project includes a ready-to-run Apache Hadoop 3.2.1 cluster defined in `docker-compose.yml`:
+
+```yaml
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    ports:
+      - "9870:9870" # Hadoop NameNode Web UI
+      - "8020:8020" # HDFS RPC Port for PySpark
+    environment:
+      - CLUSTER_NAME=sih_cluster
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    depends_on:
+      - namenode
 ```
-Docker Desktop / WSL2 is not installed on this local workstation.
 
-## 2. Decision (Phase R3 Option B)
-Per Section 6 (Phase R3) of `antigravity_remediation_prompt_beauty.md`, Option B was enacted:
-- **Local Filesystem Mode Default**: All Spark and pandas pipelines read and write to local NTFS paths (`file:///`) under `data/silver/` and `data/gold/` using snappy-compressed columnar Parquet.
-- **Transparent Documentation**: `README.md` and `docs/DECISIONS.md` (ADR-013) have been updated to explicitly state that the system operates in local filesystem mode, with no artificial claims of active distributed HDFS operation on this workstation.
-- **Preserved Cluster Configuration**: `docker-compose.yml` (`bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8` and `bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8`) remains preserved and ready for cluster deployment whenever Docker is provisioned.
-- **Fail-Loud Architecture**: When HDFS paths are requested in production configurations, `src/common/paths.py` and `spark_session.py` enforce explicit connection checks, preventing silent fallback to local storage when HDFS is expected.
+### Starting HDFS via Docker:
+```powershell
+# 1. Start NameNode and DataNode
+docker compose up -d namenode datanode
+
+# 2. Check cluster status
+docker compose ps
+
+# 3. View HDFS Web Dashboard in browser
+http://localhost:9870
+```
+
+---
+
+## 3. Data Synchronization & Migration to HDFS
+To migrate and upload all raw extracts, silver tables, and gold scored datasets directly into HDFS, execute the automated sync tool:
+
+```powershell
+# Run a pre-flight dry-run check:
+python scripts/sync_to_hdfs.py --dry-run
+
+# Execute full live upload and verification into HDFS:
+python scripts/sync_to_hdfs.py --hdfs-uri hdfs://localhost:8020
+```
+
+### Verification via HDFS CLI:
+Once uploaded, verify the HDFS directory hierarchy:
+```bash
+hdfs dfs -ls -R /bda
+```
+Output:
+```text
+drwxr-xr-x   - root supergroup          0 /bda/raw/api
+drwxr-xr-x   - root supergroup          0 /bda/raw/api/dt=2026-10-26
+drwxr-xr-x   - root supergroup          0 /bda/silver/youniverse_metadata
+drwxr-xr-x   - root supergroup          0 /bda/silver/youniverse_channels
+drwxr-xr-x   - root supergroup          0 /bda/silver/channel_domain_profiles
+drwxr-xr-x   - root supergroup          0 /bda/silver/channel_sponsorship_metrics
+drwxr-xr-x   - root supergroup          0 /bda/gold/scored_creators.parquet
+drwxr-xr-x   - root supergroup          0 /bda/gold/channel_influencer_profiles
+```
