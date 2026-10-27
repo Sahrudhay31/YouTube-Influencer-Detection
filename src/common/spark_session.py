@@ -45,6 +45,9 @@ def get_spark(app_name: str | None = None, local_mode: bool = False, master: str
     if "PYSPARK_DRIVER_PYTHON" not in os.environ:
         os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
+    # Ensure HDFS client authenticates as cluster superuser
+    os.environ.setdefault("HADOOP_USER_NAME", "root")
+
     try:
         from pyspark.sql import SparkSession  # noqa: PLC0415
     except ImportError:
@@ -53,7 +56,12 @@ def get_spark(app_name: str | None = None, local_mode: bool = False, master: str
         )
 
     cfg = get_settings()["spark"]
-    hdfs_uri = "file:///" if (local_mode or os.environ.get("SPARK_LOCAL_MODE") == "1") else get_hdfs_uri()
+    # In production/normal execution, default to pure HDFS (hdfs://namenode:8020)
+    # When test fixtures explicitly pass local_mode=True, use file:/// to allow offline pytest runs
+    if local_mode or os.environ.get("SPARK_LOCAL_MODE") == "1":
+        hdfs_uri = "file:///"
+    else:
+        hdfs_uri = get_hdfs_uri()
 
     builder = (
         SparkSession.builder
@@ -66,7 +74,7 @@ def get_spark(app_name: str | None = None, local_mode: bool = False, master: str
         builder = (
             builder
             .config("spark.hadoop.fs.defaultFS", hdfs_uri)
-            .config("dfs.client.use.datanode.hostname", "true")
+            .config("spark.hadoop.dfs.client.use.datanode.hostname", "true")
         )
 
     spark = builder.getOrCreate()

@@ -1,0 +1,37 @@
+# finance_investing.yaml — domain config for Finance, Investing & Crypto
+domain: finance_investing
+language: en
+micro_domains: [personal_finance, stock_investing, crypto, real_estate, entrepreneurship, dividend_investing]
+
+keywords:
+  core:
+    - {term: "finance", source: agent_proposed}
+    - {term: "investing", source: agent_proposed}
+    - {term: "stocks", source: agent_proposed}
+    - {term: "stock market", source: agent_proposed}
+    - {term: "dividend", source: agent_proposed}
+    - {term: "etf", source: agent_proposed}
+    - {term: "index funds", source: agent_proposed}
+    - {term: "passive income", source: agent_proposed}
+    - {term: "budgeting", source: agent_proposed}
+    - {term: "money management", source: agent_proposed}
+    - {term: "crypto", source: agent_proposed}
+    - {term: "bitcoin", source: agent_proposed}
+    - {term: "ethereum", source: agent_proposed}
+    - {term: "blockchain", source: agent_proposed}
+    - {term: "trading", source: agent_proposed}
+    - {term: "real estate", source: agent_proposed}
+    - {term: "reit", source: agent_proposed}
+    - {term: "wealth", source: agent_proposed}
+    - {term: "financial freedom", source: agent_proposed}
+    - {term: "side hustle", source: agent_proposed}
+    - {term: "roth ira", source: agent_proposed}
+    - {term: "credit cards", source: agent_proposed}
+
+intents:
+  - "investing"
+  - "guide"
+  - "analysis"
+  - "portfolio"
+  - "review"
+  - "strategy"

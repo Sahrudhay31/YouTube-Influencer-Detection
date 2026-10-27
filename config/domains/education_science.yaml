@@ -1,0 +1,26 @@
+# education_science.yaml — domain config for Science, Education & STEM
+domain: education_science
+language: en
+micro_domains: [science_experiments, physics_math, coding_tech, history_documentary, space_astronomy]
+
+keywords:
+  core:
+    - {term: "science", source: agent_proposed}
+    - {term: "education", source: agent_proposed}
+    - {term: "physics", source: agent_proposed}
+    - {term: "math", source: agent_proposed}
+    - {term: "biology", source: agent_proposed}
+    - {term: "astronomy", source: agent_proposed}
+    - {term: "space", source: agent_proposed}
+    - {term: "documentary", source: agent_proposed}
+    - {term: "experiment", source: agent_proposed}
+    - {term: "tutorial", source: agent_proposed}
+    - {term: "learn", source: agent_proposed}
+    - {term: "explained", source: agent_proposed}
+
+intents:
+  - "explained"
+  - "experiment"
+  - "tutorial"
+  - "guide"
+  - "documentary"

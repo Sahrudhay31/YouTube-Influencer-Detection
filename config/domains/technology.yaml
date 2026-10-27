@@ -1,0 +1,47 @@
+# technology.yaml — domain config for Technology & Consumer Electronics
+domain: technology
+language: en
+micro_domains: [smartphones_tablets, laptops_computers, gaming_hardware, software_apps, audio_video_gear, ai_machine_learning]
+
+keywords:
+  core:
+    - {term: "technology", source: agent_proposed}
+    - {term: "tech review", source: agent_proposed}
+    - {term: "smartphone", source: agent_proposed}
+    - {term: "iphone", source: agent_proposed}
+    - {term: "android", source: agent_proposed}
+    - {term: "laptop", source: agent_proposed}
+    - {term: "macbook", source: agent_proposed}
+    - {term: "pc build", source: agent_proposed}
+    - {term: "gpu", source: agent_proposed}
+    - {term: "cpu", source: agent_proposed}
+    - {term: "graphics card", source: agent_proposed}
+    - {term: "nvidia", source: agent_proposed}
+    - {term: "amd", source: agent_proposed}
+    - {term: "intel", source: agent_proposed}
+    - {term: "gadgets", source: agent_proposed}
+    - {term: "unboxing", source: agent_proposed}
+    - {term: "mechanical keyboard", source: agent_proposed}
+    - {term: "headphones", source: agent_proposed}
+    - {term: "earbuds", source: agent_proposed}
+    - {term: "monitor", source: agent_proposed}
+    - {term: "smart home", source: agent_proposed}
+    - {term: "smartwatch", source: agent_proposed}
+    - {term: "apple watch", source: agent_proposed}
+    - {term: "coding", source: agent_proposed}
+    - {term: "software", source: agent_proposed}
+    - {term: "programming", source: agent_proposed}
+    - {term: "artificial intelligence", source: agent_proposed}
+    - {term: "ai tools", source: agent_proposed}
+    - {term: "chatgpt", source: agent_proposed}
+    - {term: "benchmarks", source: agent_proposed}
+    - {term: "tech setup", source: agent_proposed}
+    - {term: "desk setup", source: agent_proposed}
+
+intents:
+  - "review"
+  - "unboxing"
+  - "comparison"
+  - "benchmarks"
+  - "setup"
+  - "guide"

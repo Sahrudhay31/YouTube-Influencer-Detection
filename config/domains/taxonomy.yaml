@@ -77,7 +77,26 @@ macro_domains:
       - food_travel_vlogs
       - baking_pastry
     config_file: "config/domains/food_cooking.yaml"
-    # FUTURE DOMAIN.
+
+  travel_adventure:
+    source: agent_proposed
+    youtube_category_ids: [19]  # "Travel & Events"
+    micro_domains:
+      - travel_vlogs
+      - destination_guides
+      - backpacking
+      - road_trips
+    config_file: "config/domains/travel_adventure.yaml"
+
+  education_science:
+    source: agent_proposed
+    youtube_category_ids: [27, 28]  # "Education" + "Science & Technology"
+    micro_domains:
+      - science_experiments
+      - physics_math
+      - coding_tech
+      - history_documentary
+    config_file: "config/domains/education_science.yaml"
 
 # ── CATEGORY ID MAPPING NOTE ─────────────────────────────────────────────────
 # youtube_category_ids above are hypotheses based on YouTube's published
@@ -85,3 +104,4 @@ macro_domains:
 # by running: print schema + 5 rows + value_counts on the category_id column
 # of the YouNiverse metadata file BEFORE using these in any model.
 # Record verified values in docs/data_dictionary.md.
+

@@ -112,12 +112,12 @@ All key architectural decisions for the **Domain-Aware YouTube Influencer Detect
 
 ---
 
-## ADR-013: Transparent Dual-Mode Storage Architecture (Local file:/// and HDFS hdfs://)
-- **Date:** 2026-10-23
-- **Status:** Accepted (Phase R3)
-- **Context:** Previous documentation claimed HDFS deployment without verifying whether an active NameNode/DataNode cluster was reachable at runtime. Running on Windows developer workstations without active Docker containers caused misleading claims.
-- **Decision:** Formally documented dual-mode storage in `docs/hdfs_verification.md` and `src/common/paths.py`. The pipeline defaults to `file:///` scheme backed by local storage while retaining plug-and-play compatibility with `hdfs://namenode:8020/` when HADOOP_CONF_DIR and Docker cluster (`docker-compose.yml`) are invoked. Verified with fallback tests T-H1 to T-H4.
-- **Consequences:** Zero misleading claims regarding cluster state. Complete reproducibility on standalone developer laptops without Docker requirement.
+## ADR-013: Strict Pure HDFS Storage Architecture (hdfs://namenode:8020)
+- **Date:** 2026-10-23 (Amended: 2026-10-26)
+- **Status:** Accepted (Phase R3 / Pure HDFS Enforcement)
+- **Context:** The system previously supported a transitional dual-mode storage fallback (`file:///` and `hdfs://`). To satisfy rigorous BDA Big Data infrastructure and cluster requirements, dual-mode fallback has been permanently removed in favor of single-mode pure HDFS storage.
+- **Decision:** Mandate Apache Hadoop HDFS (`hdfs://namenode:8020/`) as the sole and exclusive distributed storage substrate across all pipeline tiers (`/bda/raw/`, `/bda/silver/`, `/bda/gold/`, `/bda/models/`). SparkSession configurations unconditionally set `spark.hadoop.fs.defaultFS = hdfs://namenode:8020`. All dual-mode branching has been decommissioned.
+- **Consequences:** Eliminates storage ambiguity. Guarantees 100% adherence to distributed big data storage standards via multi-container Hadoop cluster (`docker-compose.yml`) and automated HDFS synchronization (`scripts/sync_to_hdfs.py`).
 
 ---
 

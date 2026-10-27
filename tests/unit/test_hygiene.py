@@ -71,7 +71,7 @@ def test_th3_no_personal_user_paths_in_tracked_files():
             rel == ".env"
             or path.suffix in [".pyc", ".pyo", ".pyd", ".png", ".jpg", ".parquet"]
             or "__pycache__" in rel
-            or any(rel.startswith(p) for p in [".git/", ".venv/", "venv/", "state/", "logs/", "data/", "tests/fixtures/"])
+            or any(rel.startswith(p) for p in [".git/", ".venv/", "venv/", "state/", "logs/", "data/", "tests/fixtures/", "node_modules/", "frontend/node_modules/", "frontend/dist/"])
         ):
             continue
         try:

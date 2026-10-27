@@ -1,0 +1,34 @@
+# food_cooking.yaml — domain config for Food, Cooking & Culinary
+domain: food_cooking
+language: en
+micro_domains: [recipes_cooking_tutorials, restaurant_reviews, food_travel_vlogs, baking_pastry, meal_ideas]
+
+keywords:
+  core:
+    - {term: "food", source: agent_proposed}
+    - {term: "cooking", source: agent_proposed}
+    - {term: "recipe", source: agent_proposed}
+    - {term: "baking", source: agent_proposed}
+    - {term: "chef", source: agent_proposed}
+    - {term: "street food", source: agent_proposed}
+    - {term: "restaurant", source: agent_proposed}
+    - {term: "culinary", source: agent_proposed}
+    - {term: "dinner", source: agent_proposed}
+    - {term: "breakfast", source: agent_proposed}
+    - {term: "sourdough", source: agent_proposed}
+    - {term: "pasta", source: agent_proposed}
+    - {term: "pizza", source: agent_proposed}
+    - {term: "steak", source: agent_proposed}
+    - {term: "bbq", source: agent_proposed}
+    - {term: "dessert", source: agent_proposed}
+    - {term: "air fryer", source: agent_proposed}
+    - {term: "meal prep", source: agent_proposed}
+    - {term: "homemade", source: agent_proposed}
+    - {term: "tasting", source: agent_proposed}
+
+intents:
+  - "recipe"
+  - "tutorial"
+  - "review"
+  - "cooking"
+  - "guide"

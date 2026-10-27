@@ -1,0 +1,41 @@
+# fitness_health.yaml — domain config for Fitness, Health & Wellness
+domain: fitness_health
+language: en
+micro_domains: [gym_weightlifting, yoga_mindfulness, nutrition_supplements, running_cardio, sports_performance, calisthenics]
+
+keywords:
+  core:
+    - {term: "fitness", source: agent_proposed}
+    - {term: "workout", source: agent_proposed}
+    - {term: "gym", source: agent_proposed}
+    - {term: "bodybuilding", source: agent_proposed}
+    - {term: "weightlifting", source: agent_proposed}
+    - {term: "powerlifting", source: agent_proposed}
+    - {term: "calisthenics", source: agent_proposed}
+    - {term: "running", source: agent_proposed}
+    - {term: "marathon", source: agent_proposed}
+    - {term: "cardio", source: agent_proposed}
+    - {term: "hiit", source: agent_proposed}
+    - {term: "yoga", source: agent_proposed}
+    - {term: "pilates", source: agent_proposed}
+    - {term: "mobility", source: agent_proposed}
+    - {term: "stretching", source: agent_proposed}
+    - {term: "protein", source: agent_proposed}
+    - {term: "whey protein", source: agent_proposed}
+    - {term: "creatine", source: agent_proposed}
+    - {term: "supplements", source: agent_proposed}
+    - {term: "pre workout", source: agent_proposed}
+    - {term: "meal prep", source: agent_proposed}
+    - {term: "diet", source: agent_proposed}
+    - {term: "fat loss", source: agent_proposed}
+    - {term: "muscle gain", source: agent_proposed}
+    - {term: "hypertrophy", source: agent_proposed}
+    - {term: "strength training", source: agent_proposed}
+
+intents:
+  - "workout"
+  - "routine"
+  - "transformation"
+  - "exercises"
+  - "review"
+  - "guide"

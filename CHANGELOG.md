@@ -4,6 +4,34 @@ All notable changes to the **Domain-Aware YouTube Influencer Detection & Promoti
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Phase R10: Multi-Domain Live YouTube API Discovery] - 2026-10-27
+
+### Added
+- **Multi-Domain Lexicons & Taxonomy (`config/domains/`)**:
+  - Added dedicated domain configurations with core keywords, creator search intents, and micro-domains for:
+    - `technology.yaml`: Laptops, smartphones, PC builds, GPUs, mechanical keyboards, software & AI tools.
+    - `gaming_entertainment.yaml`: Gameplay, walkthroughs, esports, gaming gear & streaming culture.
+    - `fitness_health.yaml`: Strength training, hypertrophy, calisthenics, nutrition & cardio.
+    - `finance_investing.yaml`: Stock investing, index funds, crypto, real estate & passive income.
+    - `food_cooking.yaml`: Recipes, baking, artisan sourdough, steak techniques & restaurant reviews.
+    - `travel_adventure.yaml`: Travel vlogs, destination guides, backpacking & itineraries.
+    - `education_science.yaml`: STEM explainers, astronomy, coding & science documentaries.
+- **Multi-Domain Domain Predictor (`src/app/domain_predictor.py`)**:
+  - Upgraded `DomainPredictor` to classify briefs across all 8 macro domains dynamically.
+  - Generates cross-domain confidence scores, micro-domains, and top lexicon drivers.
+- **Dynamic Multi-Domain Query Builder (`src/discovery/query_builder.py`)**:
+  - Replaced hardcoded beauty fallback with domain-specific intent pairing and preserved raw user query extraction.
+  - Supports automatic domain detection or explicit target domain passing.
+- **Multi-Domain Candidate Discovery (`src/discovery/candidate_discovery.py`)**:
+  - Extended live discovery to tag and score creators with their detected domain badge and micro-domain.
+- **Backend API (`src/api/server.py`)**:
+  - Added `domain` field to `LiveSearchRequest` for domain-scoped or auto-detected live discovery.
+  - Added `@app.get("/api/domains")` endpoint returning metadata, taglines, and sample briefs for all domains.
+- **Interactive Frontend (`frontend/src/App.jsx`, `App.css`)**:
+  - Added interactive Domain Selector pill bar with icons for all domains.
+  - Contextual placeholders and dynamic quick-example brief chips tailored to the active domain.
+  - Domain-colored creator badges and thumbnail avatars on discovered channel cards.
+
 ## [Phase R9: Dashboard v2 Upgrade (InfluencerAI)] - 2026-10-25
 
 ### Added

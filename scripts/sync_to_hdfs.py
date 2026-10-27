@@ -102,8 +102,9 @@ def sync_all_to_hdfs(
 
         try:
             logger.info("Syncing '%s' -> '%s' ...", src_path, dest_hdfs)
+            src_uri = f"file:///{src_path.resolve().as_posix()}"
             if dtype == "parquet":
-                df = spark.read.parquet(str(src_path))
+                df = spark.read.parquet(src_uri)
                 local_count = df.count()
                 df.write.mode("overwrite").parquet(dest_hdfs)
                 hdfs_count = spark.read.parquet(dest_hdfs).count()
@@ -116,7 +117,7 @@ def sync_all_to_hdfs(
                 results["synced"].append({"dataset": f"{l_zone}/{l_name}", "rows": hdfs_count, "path": dest_hdfs})
             else:
                 # Raw files / json
-                df = spark.read.json(str(src_path))
+                df = spark.read.json(src_uri)
                 df.write.mode("overwrite").json(dest_hdfs)
                 logger.info("  [SUCCESS] Written JSON to HDFS: %s", dest_hdfs)
                 results["synced"].append({"dataset": f"{l_zone}/{l_name}", "path": dest_hdfs})
@@ -133,7 +134,8 @@ def sync_all_to_hdfs(
             dest_api_hdfs = hdfs("raw_api", dt_name)
             try:
                 logger.info("Syncing raw API partition '%s' -> '%s' ...", partition, dest_api_hdfs)
-                df_api = spark.read.json(str(partition))
+                part_uri = f"file:///{partition.resolve().as_posix()}"
+                df_api = spark.read.json(part_uri)
                 df_api.write.mode("overwrite").json(dest_api_hdfs)
                 results["synced"].append({"dataset": f"raw_api/{dt_name}", "path": dest_api_hdfs})
                 logger.info("  [SUCCESS] Written raw API partition to HDFS.")

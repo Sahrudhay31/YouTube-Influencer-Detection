@@ -62,18 +62,19 @@ def discover_offline_candidates(
 def discover_live_candidates(
     product_brief: str,
     yt_client: YouTubeClient,
+    domain: str = "auto",
     max_search_calls: int = 1,
     max_results_per_call: int = 25,
     min_subscribers: int = 1000,
 ) -> pd.DataFrame:
     """
-    Query the live YouTube Data API v3 within strict quota guard limits.
+    Query the live YouTube Data API v3 within strict quota guard limits across any domain.
     Returns discovered channels with real channel names (snippet.title),
-    subscriber counts, video statistics, and predicted topical focus.
+    subscriber counts, video statistics, size tier, and predicted topical domain focus.
 
     Cost: 100 units per search.list call + 1 unit for batched channels.list call.
     """
-    queries = build_search_queries(product_brief, max_queries=max_search_calls)
+    queries = build_search_queries(product_brief, max_queries=max_search_calls, domain=domain)
     predictor = DomainPredictor()
 
     channel_records: dict[str, dict[str, Any]] = {}
@@ -142,10 +143,15 @@ def discover_live_candidates(
         desc = snip.get("description", "")
         thumb_url = snip.get("thumbnails", {}).get("default", {}).get("url", "")
 
-        # Topical focus: predict beauty domain fit on sample video text
+        # Topical focus: predict creator domain on sample video text + description
         combined_text = " ".join(rec["sample_videos"] + rec["sample_descriptions"] + [desc])
         pred_res = predictor.predict(combined_text)
-        topical_focus = pred_res["confidence"] if pred_res["domain_name"] != "Out-of-Domain" else 0.2
+        creator_domain = pred_res.get("domain", "general")
+        creator_domain_name = pred_res.get("domain_name", "Creator")
+        creator_micro = pred_res.get("matched_micro_domains", [])
+        micro_label = creator_micro[0].replace("_", " ").title() if creator_micro else "Creator"
+
+        topical_focus = pred_res.get("confidence", 0.5)
 
         # Filter by minimum subscribers
         if subs > 0 and subs < min_subscribers:
@@ -176,7 +182,9 @@ def discover_live_candidates(
             "size_tier": size_tier,
             "total_views": total_views,
             "video_count": video_count,
-            "topical_focus": round(topical_focus, 3),
+            "domain": creator_domain,
+            "domain_label": creator_domain_name,
+            "topical_focus": f"{creator_domain_name} · {micro_label}",
             "promotion_potential_score": round(raw_score, 1),
             "thumbnail_url": thumb_url,
             "description": desc[:300],
@@ -215,22 +223,23 @@ def discover_live_candidates(
 def run_discovery_pipeline(
     product_brief: str,
     mode: str = "dry_run",
+    domain: str = "auto",
     max_units: int = 300,
     max_candidates: int = 25,
 ) -> dict[str, Any]:
     """
     Orchestrate candidate discovery for a given product brief.
-    Runs offline discovery and (if mode == 'live') live YouTube Data API discovery.
+    Runs offline discovery and (if mode == 'live') live YouTube Data API discovery across any domain.
     """
     yt = YouTubeClient(mode=mode, per_run_max=max_units)
 
     offline_df = discover_offline_candidates(product_brief, max_candidates=max_candidates)
 
     if mode == "live":
-        live_df = discover_live_candidates(product_brief, yt_client=yt)
+        live_df = discover_live_candidates(product_brief, yt_client=yt, domain=domain)
     else:
         # Dry-run: calculate planned queries and estimated quota
-        planned_queries = build_search_queries(product_brief, max_queries=1)
+        planned_queries = build_search_queries(product_brief, max_queries=1, domain=domain)
         est_units = len(planned_queries) * 100 + 1
         live_df = pd.DataFrame()
         logger.info("[Discovery] DRY RUN: Planned %d query (%d units). No API calls made.", len(planned_queries), est_units)

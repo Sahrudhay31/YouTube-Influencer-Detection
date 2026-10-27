@@ -1,0 +1,40 @@
+# gaming_entertainment.yaml — domain config for Gaming & Esports
+domain: gaming_entertainment
+language: en
+micro_domains: [game_reviews_walkthroughs, esports, gaming_gear_setups, streaming_culture, indie_games, rpg_mmo]
+
+keywords:
+  core:
+    - {term: "gaming", source: agent_proposed}
+    - {term: "gameplay", source: agent_proposed}
+    - {term: "walkthrough", source: agent_proposed}
+    - {term: "playthrough", source: agent_proposed}
+    - {term: "esports", source: agent_proposed}
+    - {term: "streamer", source: agent_proposed}
+    - {term: "twitch", source: agent_proposed}
+    - {term: "playstation", source: agent_proposed}
+    - {term: "ps5", source: agent_proposed}
+    - {term: "xbox", source: agent_proposed}
+    - {term: "nintendo switch", source: agent_proposed}
+    - {term: "steam deck", source: agent_proposed}
+    - {term: "gaming pc", source: agent_proposed}
+    - {term: "gaming laptop", source: agent_proposed}
+    - {term: "gaming mouse", source: agent_proposed}
+    - {term: "fps", source: agent_proposed}
+    - {term: "minecraft", source: agent_proposed}
+    - {term: "roblox", source: agent_proposed}
+    - {term: "valorant", source: agent_proposed}
+    - {term: "fortnite", source: agent_proposed}
+    - {term: "elden ring", source: agent_proposed}
+    - {term: "gta", source: agent_proposed}
+    - {term: "speedrun", source: agent_proposed}
+    - {term: "game review", source: agent_proposed}
+    - {term: "boss fight", source: agent_proposed}
+
+intents:
+  - "gameplay"
+  - "walkthrough"
+  - "review"
+  - "guide"
+  - "highlights"
+  - "lore"

@@ -1,0 +1,28 @@
+# travel_adventure.yaml — domain config for Travel, Adventure & Tourism
+domain: travel_adventure
+language: en
+micro_domains: [travel_vlogs, destination_guides, backpacking, luxury_travel, road_trips, budget_travel]
+
+keywords:
+  core:
+    - {term: "travel", source: agent_proposed}
+    - {term: "travel vlog", source: agent_proposed}
+    - {term: "backpacking", source: agent_proposed}
+    - {term: "vacation", source: agent_proposed}
+    - {term: "destination", source: agent_proposed}
+    - {term: "hotel review", source: agent_proposed}
+    - {term: "flight", source: agent_proposed}
+    - {term: "road trip", source: agent_proposed}
+    - {term: "itinerary", source: agent_proposed}
+    - {term: "tourist", source: agent_proposed}
+    - {term: "hidden gems", source: agent_proposed}
+    - {term: "travel guide", source: agent_proposed}
+    - {term: "nomad", source: agent_proposed}
+    - {term: "explore", source: agent_proposed}
+
+intents:
+  - "guide"
+  - "vlog"
+  - "review"
+  - "itinerary"
+  - "tips"

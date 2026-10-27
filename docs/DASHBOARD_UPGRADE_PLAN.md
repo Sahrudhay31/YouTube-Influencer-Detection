@@ -9,7 +9,7 @@ Upgrade the Streamlit dashboard ("InfluencerAI") for the BDA YouTube Influencer 
 - Secure the Live YouTube API Discovery tab with dry-run default, explicit two-step live confirmation, real-time quota guard telemetry, and non-mixing guarantees.
 - Revamp the Creator Card with full 6-component radar + raw contribution waterfalls, honest sample requirements for promo lift, and a persistent shortlist drawer.
 - Upgrade Model Results with model registry flags (overfit/suspicious accuracy), 3-cutoff backtest comparison charts, and empirical honest-findings generation.
-- Upgrade Pipeline Status with Pacific midnight rollover gauge, 7-day history, 30-day retention countdown, data lake freshness timestamps, and dual-mode storage status.
+- Upgrade Pipeline Status with Pacific midnight rollover gauge, 7-day history, 30-day retention countdown, data lake freshness timestamps, and HDFS cluster storage status.
 - Rectify inaccurate claims in sidebars, headers, and tooltips regarding calibration, HDFS state, and backtest holdouts.
 - Maintain 100% Spark-free runtime execution in the frontend and satisfy `python scripts/check_all.py`.
 
@@ -84,7 +84,7 @@ To ensure clean unit testing without Streamlit runtime dependencies, all pure bu
 - **Phase 6: Page 4 — Pipeline Status (`pipeline_status.py`)**
   - Pacific midnight quota gauge & 7-day chart.
   - 30-day retention partition countdown.
-  - Data freshness & dual-mode storage status.
+  - Data freshness & HDFS cluster storage status.
 
 - **Phase 7: Full System Verification & Documentation**
   - Run `python scripts/check_all.py`.

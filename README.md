@@ -2,7 +2,7 @@
 
 A big-data engineering system built on Apache Spark (SQL + MLlib) and columnar Snappy Parquet designed to analyze YouTube creators, evaluate domain authority, detect sponsorship activities, and rank creators by **Promotion-Potential Score** for product marketing campaigns.
 
-> **Storage Runtime Mode:** Runs in **local filesystem mode** (`file:///`) by default for local development without Docker dependencies; a multi-container Apache Hadoop HDFS Docker Compose environment (`docker-compose.yml`) is provided for distributed cluster deployments.
+> **Storage Architecture:** Strictly operates on **Apache Hadoop HDFS** (`hdfs://namenode:8020/`). All raw, silver, gold, and model zones reside within HDFS partitioned columnar Snappy Parquet backed by the multi-container Apache Hadoop 3.2.1 cluster (`docker-compose.yml`).
 
 ---
 
@@ -204,20 +204,22 @@ python -m src.ingestion.plan --channels 10 --videos-per-channel 10 --comment-vid
 python scripts/scalability_benchmark.py
 ```
 
-### 7. Launch Interactive Streamlit Discovery Dashboard
+### 7. Launch CreatorPulse Web App (Exploding Topics Design)
 ```powershell
-# Recommended cross-platform launch command (works across all Windows environments):
-python -m streamlit run dashboard.py
-
-# Or launch directly from the app entrypoint:
-python -m streamlit run src/app/main.py
+# Single-command launcher (Starts FastAPI + serves React frontend at http://localhost:8000):
+python run_app.py
 ```
-Access the application in your browser at `http://localhost:8501`.
-Features include:
-- **🔍 Find Influencers**: Dynamic product brief domain classification, ranked creator leaderboard, and interactive budget portfolio allocator.
-- **👤 Creator Card**: Radar chart breakdown of the 6 score components, sponsorship history, and audience authenticity diagnostics.
-- **📊 Model Results**: Live inspection of `metrics/model_registry.csv`, validation curves, confusion matrices, and time-split backtest benchmarks.
-- **⚙️ Pipeline Status**: Real-time quota consumption gauge, recent API audit log, and 30-day retention compliance monitor.
+Access the application in your browser at **`http://localhost:8000`**.
+Features inspired by Exploding Topics:
+- **🚀 Exploding Topics Creator Cards**: Displays creators with growth velocity badges (`EXPLODING`, `HIGH CONVERSION`, `TRENDING`), glowing SVG trend sparklines, Promotion Potential Percentiles (0-100), and one-click bookmarking.
+- **🏷️ Real-Time Category Pills**: Instant horizontal category filters (`Beauty & Personal Care`, `People & Blogs`, `Entertainment`, `Film & Animation`, etc.) with creator counts.
+- **⚡ Trend & Size Filters**: Filter by `Exploding (+100%+)`, `High Conversion`, `Trending`, or channel size tiers (`Mega`, `Macro`, `Mid`, `Nano`).
+- **🔍 Instant Search**: Typeahead search across 2,615 channels, domain topics, and keywords with sub-15ms response latency.
+- **👤 Channel Intelligence Modal**: Deep-dive dossier with 6-factor radar score components, organic vs sponsored view comparisons, and direct YouTube links.
+- **⭐ Campaign Shortlist & CSV Export**: Select creators for your marketing campaign and export a clean CSV ready for brand outreach.
+- **📡 Live YouTube Discovery**: Single-click YouTube Data API v3 creator discovery with QuotaGuard protection and real-time ledger accounting.
+
+*(Optional Legacy Streamlit Dashboard: `python -m streamlit run dashboard.py` on port 8501).*
 
 ---
 

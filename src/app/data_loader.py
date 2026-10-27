@@ -266,18 +266,8 @@ def load_data_freshness() -> dict[str, Any]:
             "path": str(path.relative_to(root)),
         })
 
-    # Detect active storage mode from config without starting Spark
-    cfg_path = root / "config" / "settings.yaml"
-    storage_mode = "Local (file:///)"
-    if cfg_path.exists():
-        try:
-            with open(cfg_path, "r", encoding="utf-8") as f:
-                sett = yaml.safe_load(f)
-                scheme = sett.get("spark", {}).get("storage_scheme", "file:///")
-                if "hdfs" in scheme.lower():
-                    storage_mode = "HDFS Cluster (hdfs://)"
-        except Exception:
-            pass
+    # Pure HDFS Storage Architecture
+    storage_mode = "HDFS Cluster (hdfs://namenode:8020)"
 
     return {
         "tables": freshness_info,

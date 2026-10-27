@@ -16,6 +16,7 @@ spark:
   app_name: "yt-influencer-pipeline"
   log_level: "WARN"
   shuffle_partitions: 8                 # low for dev; raise for full data
+  storage_scheme: "hdfs://"             # Pure HDFS Storage Architecture
 
 # ── DATA ──────────────────────────────────────────────────────────────────────
 data:
